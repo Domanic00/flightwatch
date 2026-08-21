@@ -1,4 +1,4 @@
-name: FlightWatch hourly monitor
+name: Anywhere With You hourly monitor
 
 on:
   schedule:
@@ -9,7 +9,7 @@ jobs:
   monitor:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger FlightWatch monitoring
+      - name: Trigger Anywhere With You monitoring
         run: |
           curl --fail --show-error --silent \
             --request POST \

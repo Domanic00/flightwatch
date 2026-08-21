@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: flightwatch
+    name: anywhere-with-you
     runtime: node
     buildCommand: npm install
     startCommand: npm start

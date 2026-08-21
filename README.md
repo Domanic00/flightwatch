@@ -1,4 +1,4 @@
-# FlightWatch V4
+# Anywhere With You
 
 V4 adds the automation and alert engine on top of the working V3 deployment.
 
@@ -27,7 +27,7 @@ V4 adds the automation and alert engine on top of the working V3 deployment.
 
 ## Upgrade the live site
 
-V4 is intended to replace the files in your existing GitHub `flightwatch` repository.
+V4 is intended to replace the files in your existing GitHub `anywhere-with-you` repository.
 
 Do NOT delete or recreate the Neon database. V4 automatically adds the new `alerts` table and keeps the existing V3 tables/data.
 
@@ -40,7 +40,7 @@ Add:
 Later, for email:
 
     RESEND_API_KEY=...
-    RESEND_FROM=FlightWatch <your-verified-sender@example.com>
+    RESEND_FROM=Anywhere With You <your-verified-sender@example.com>
 
 Later, for SMS:
 
@@ -54,7 +54,7 @@ You can deploy V4 before Resend or Twilio are configured. The engine will record
 
 The included workflow is:
 
-    .github/workflows/flightwatch-monitor.yml
+    .github/workflows/anywhere-with-you-monitor.yml
 
 In your GitHub repository, create these repository Actions secrets:
 
@@ -63,7 +63,7 @@ In your GitHub repository, create these repository Actions secrets:
 
 `FLIGHTWATCH_URL` should be your Render site URL without a trailing slash, for example:
 
-    https://flightwatch-example.onrender.com
+    https://anywhere-with-you-example.onrender.com
 
 `CRON_SECRET` must exactly match the `CRON_SECRET` value you set in Render.
 
@@ -105,7 +105,7 @@ No manual SQL is necessary. V4 runs `CREATE TABLE IF NOT EXISTS` at startup and 
 
 ## Important
 
-FlightWatch uses the fare values returned by Google Travel Explore. Always verify the final itinerary, traveler count, fees, and final booking price before purchasing.
+Anywhere With You uses the fare values returned by Google Travel Explore. Always verify the final itinerary, traveler count, fees, and final booking price before purchasing.
 
 
 ## V5 additions
@@ -172,7 +172,7 @@ For backward compatibility, `admin` (and a blank email) also remain valid master
 The first-time setup button is renamed to **First-time account setup**.
 
 ## V6.1 UI polish
-- Restyles all advanced filters to match the existing FlightWatch dark UI.
+- Restyles all advanced filters to match the existing Anywhere With You dark UI.
 - Search inputs, date pickers, cabin/stops dropdowns, destination search, and airline search now use the same border, background, spacing, and focus treatment as the original controls.
 - Destination result cards now maintain a consistent two-row visual footprint.
 - When only one distinct fare is returned for a destination, the second row becomes a subtle informational placeholder rather than leaving an awkward empty card area.
@@ -200,7 +200,7 @@ Planned safeguards:
 - Every user ticket creation/update is written to the audit trail.
 
 ## V6.2
-- Rebrands FlightWatch to **Anywhere With You**.
+- Rebrands Anywhere With You to **Anywhere With You**.
 - Discover description is **Just us. Somewhere else.**
 - Advanced filters are collapsed by default; only the primary search row is shown initially.
 - Bottom-right disclosure control expands/collapses the remaining filters.
@@ -229,3 +229,10 @@ Final beta-readiness pass for the evening:
 - Improves first-time invited-user guidance.
 - Admin email failures now expose provider HTTP/detail information and are logged to Error Center.
 - Keeps the permanent sidebar Sign out and Report an issue behavior.
+
+## V6.4 Final branding cleanup
+- Browser/tab title is now simply **Anywhere With You**.
+- Removed legacy visible FlightWatch branding and old visible V3/Vx labels from the application.
+- Normalized application-facing branding to **Anywhere With You**.
+- Product description remains **Just us. Somewhere else.**
+- Internal package version remains 6.4.0 for release tracking; it is not part of the browser title.
