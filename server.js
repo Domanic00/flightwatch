@@ -173,6 +173,18 @@ app.patch("/api/super/users/:id/role",async(q,r)=>{if(!isSuperAdmin(q))return r.
 app.patch("/api/super/users/:id/status",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});try{r.json(await db.setManagedUserStatus(q.params.id,q.body?.status,q.body?.reason,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
 app.get("/api/super/events",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});r.json({events:await db.getSecurityEvents(q.query.limit||200)})});
 
+
+app.post("/api/reports",async(q,r)=>{try{
+  const report=await db.createUserReport(q.session.user,q.body?.title,q.body?.description);
+  await db.audit("user_report_created",`Report #${report.id}: ${report.title}`,q.session.user.email);
+  r.json({ok:true,report});
+}catch(e){r.status(400).json({error:e.message})}});
+
+app.get("/api/admin/reports",async(q,r)=>r.json({reports:await db.getUserReports(q.query.limit||200)}));
+app.patch("/api/admin/reports/:id",async(q,r)=>{try{
+  r.json(await db.updateUserReport(q.params.id,q.body||{},q.session.user));
+}catch(e){r.status(400).json({error:e.message})}});
+
 app.get("/api/admin/errors",async(q,r)=>r.json(await db.getErrors(q.query.limit||100)));
 app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`,q.session.user.email);r.json({ok:true})});
 app.get("/api/admin/audit",async(q,r)=>r.json(await db.getAudit(q.query.limit||100)));

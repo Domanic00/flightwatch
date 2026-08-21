@@ -26,6 +26,96 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 .airlineOption{padding:12px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.5fr .8fr .8fr auto;gap:12px;align-items:center}
 @media(max-width:760px){.airlineOption{grid-template-columns:1fr}.filterWide{width:100%}}
 
+
+/* V6.1 unified search controls */
+.search select,
+.search input,
+.filterWide select,
+.filterWide input{
+  width:100%;
+  height:42px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--surface);
+  color:var(--text);
+  padding:0 12px;
+  outline:none;
+  appearance:auto;
+}
+.search select:focus,
+.search input:focus,
+.filterWide select:focus,
+.filterWide input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%, transparent);
+}
+.filterWide input::placeholder{color:var(--muted)}
+.filterWide label{
+  display:block;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--muted);
+  font-weight:850;
+  margin-bottom:7px;
+}
+.search{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.search .filterWide{min-width:0}
+.search #find{align-self:end}
+
+/* Consistent destination cards */
+.destinationGroup{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+.destinationHead{min-height:54px}
+.destinationOptions{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+.airlineOption{
+  min-height:66px;
+  grid-template-columns:minmax(180px,1.5fr) 110px 150px auto;
+}
+.destinationPlaceholder{
+  min-height:66px;
+  border-top:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  padding:12px 16px;
+  color:var(--muted);
+  font-size:12px;
+  font-style:italic;
+}
+@media(max-width:1050px){
+  .search{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .search{grid-template-columns:1fr}
+  .airlineOption{grid-template-columns:1fr}
+  .destinationPlaceholder{display:none}
+}
+
+
+.reportWidget{position:fixed;right:22px;bottom:18px;z-index:999}
+.reportToggle{height:42px;border:1px solid var(--line);border-radius:999px;background:var(--accent);color:#fff;padding:0 18px;font-weight:850;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.reportPanel{display:none;position:absolute;right:0;bottom:52px;width:min(390px,calc(100vw - 32px));padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 20px 50px rgba(0,0,0,.38)}
+.reportPanel.show{display:block}
+.reportHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.reportHead strong{display:block}.reportHead small{display:block;color:var(--muted);margin-top:3px}
+.reportPanel textarea{width:100%;resize:vertical;min-height:120px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);padding:10px 12px;outline:none}
+.reportPanel textarea:focus{border-color:var(--accent)}
+.iconBtn{border:0;background:transparent;color:var(--muted);font-size:24px;line-height:1;cursor:pointer}
+.ticketRow{padding:14px 0;border-top:1px solid var(--line)}
+.ticketRow:first-child{border-top:0}
+.ticketMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ticketActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ticketNote{width:100%;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--text);padding:8px 10px}
+
 </style></head><body>
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
@@ -75,11 +165,26 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 
 <section id="admin" class="page"><div class="hero"><div><div class="eyebrow">ADMIN & DIAGNOSTICS</div><h1>Admin Center</h1><p>Persistent errors, provider diagnostics, beta access, and audit history—all inside FlightWatch.</p></div><button id="adminRefresh" class="btn">↻ Refresh</button></div>
 <div class="cards3" id="adminHealth"></div>
-<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Error Center</h2><p>Errors remain here until acknowledged or resolved.</p></div></div><div id="errorRows"></div></div>
+<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Error Center</h2><p>Errors remain here until acknowledged or resolved.</p></div></div><div id="errorRows"></div>
+<div class="sectionHead" style="margin-top:18px"><div><h3>User-submitted reports</h3><p>Tickets submitted from the in-app Report an issue control.</p></div></div>
+<div id="userReportRows"></div>
+</div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Beta testers</h2><p>Lightweight allowlist for personal testing. Core MCO/MIA behavior stays global.</p></div></div><div class="formGrid"><div class="field"><label>Email</label><input id="betaEmail" type="email" placeholder="tester@example.com"></div><div class="field"><label>Role</label><select id="betaRole"><option value="tester">Tester</option><option value="admin">Admin</option></select></div></div><button id="addBeta" class="btn primary" style="margin-top:12px">Add tester</button><div id="betaRows" style="margin-top:10px"></div></div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Audit log</h2><p>Important administrative actions.</p></div></div><div id="auditRows"></div></div><div id="superAdminPanel" class="panel" style="margin-top:14px;display:none"><div class="sectionHead"><div><h2>Access management</h2><p>Super Admin only · roles, suspension/revocation, and security activity.</p></div><button id="refreshAccess" class="btn">Refresh</button></div><div id="managedUsers"></div><div class="sectionHead" style="margin-top:18px"><div><h3>Security events</h3><p>Recent privileged account changes.</p></div></div><div id="securityEvents"></div></div></section>
 
-</div></main></div><div id="toast" class="toast"></div>
+</div></main></div>
+<div id="reportWidget" class="reportWidget">
+  <button id="reportToggle" class="reportToggle">Report an issue</button>
+  <div id="reportPanel" class="reportPanel">
+    <div class="reportHead"><div><strong>Report an issue</strong><small>Send a ticket to the FlightWatch admins.</small></div><button id="reportClose" class="iconBtn">×</button></div>
+    <div class="field"><label>Title</label><input id="reportTitle" maxlength="140" placeholder="Brief summary"></div>
+    <div class="field"><label>Description</label><textarea id="reportDescription" maxlength="4000" rows="6" placeholder="What happened, what were you trying to do, and what did you expect?"></textarea></div>
+    <button id="reportSubmit" class="btn primary wide">Submit report</button>
+    <small id="reportMsg"></small>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
 <script>
 let deals=[],tracked=[],profile={},watchlists=[],dealPage=1,currentUser=null;const DEALS_PER_PAGE=10;const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(n||0)),date=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"Flexible";
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}async function api(url,opt={}){const r=await fetch(url,{headers:{"Content-Type":"application/json",...(opt.headers||{})},...opt});const d=await r.json().catch(()=>({}));if(r.status===401){$("login").classList.add("show");throw new Error("Authentication required")}if(!r.ok)throw new Error(d.error||"Request failed");return d}
@@ -94,7 +199,12 @@ function renderDeals(){
   const groups=new Map();for(const d of rows){const k=d.destination||d.arrivalAirport||"Destination";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d)}
   const dests=[...groups.entries()],totalPages=Math.max(1,Math.ceil(dests.length/DEALS_PER_PAGE));if(dealPage>totalPages)dealPage=totalPages;
   const page=dests.slice((dealPage-1)*DEALS_PER_PAGE,dealPage*DEALS_PER_PAGE);
-  $("deals").innerHTML=page.length?page.map(([dest,opts])=>`<div class="destinationGroup"><div class="destinationHead"><h3>${dest}</h3><span class="muted">${opts.length} option${opts.length===1?"":"s"} · from ${money(Math.min(...opts.map(x=>x.price)))}</span></div>${opts.map(d=>`<div class="airlineOption"><div><strong>${d.airline||"Airline not listed"}</strong><div class="tiny muted">${d.departureAirport} → ${d.arrivalAirport||"USA"} · ${date(d.startDate)} – ${date(d.endDate)}</div></div><div><strong>${money(d.price)}</strong><div class="tiny muted">round trip</div></div><div class="tiny">${d.stops===0?"Nonstop":d.stops===1?"1 stop":d.stops!=null?d.stops+" stops":"Stops n/a"}${d.flightDuration?` · ${Math.floor(d.flightDuration/60)}h ${d.flightDuration%60}m`:""}</div><div><button class="btn primary" onclick="toggleTrack('${d.id}')">${tracked.some(t=>t.id===d.id)?"✓ Tracking":"Track"}</button>${d.flightLink?` <a class="link" target="_blank" rel="noopener" href="${d.flightLink}">View ↗</a>`:""}</div></div>`).join("")}</div>`).join(""):'<div class="message">No matching U.S. destinations found.</div>';
+  $("deals").innerHTML=page.length?page.map(([dest,opts])=>{
+    const visible=opts.slice(0,2);
+    const rows=visible.map(d=>`<div class="airlineOption"><div><strong>${d.airline||"Airline not listed"}</strong><div class="tiny muted">${d.departureAirport} → ${d.arrivalAirport||"USA"} · ${date(d.startDate)} – ${date(d.endDate)}</div></div><div><strong>${money(d.price)}</strong><div class="tiny muted">round trip</div></div><div class="tiny">${d.stops===0?"Nonstop":d.stops===1?"1 stop":d.stops!=null?d.stops+" stops":"Stops n/a"}${d.flightDuration?` · ${Math.floor(d.flightDuration/60)}h ${d.flightDuration%60}m`:""}</div><div><button class="btn primary" onclick="toggleTrack('${d.id}')">${tracked.some(t=>t.id===d.id)?"✓ Tracking":"Track"}</button>${d.flightLink?` <a class="link" target="_blank" rel="noopener" href="${d.flightLink}">View ↗</a>`:""}</div></div>`).join("");
+    const filler=visible.length===1?`<div class="destinationPlaceholder">No second distinct fare returned for this destination.</div>`:"";
+    return `<div class="destinationGroup"><div class="destinationHead"><h3>${dest}</h3><span class="muted">${opts.length} option${opts.length===1?"":"s"} · from ${money(Math.min(...opts.map(x=>x.price)))}</span></div><div class="destinationOptions">${rows}${filler}</div></div>`
+  }).join(""):'<div class="message">No matching U.S. destinations found.</div>';
   const p=$("dealPagination");if(dests.length<=DEALS_PER_PAGE){p.innerHTML="";return}let buttons=`<button class="pageBtn" ${dealPage===1?"disabled":""} onclick="changeDealPage(${dealPage-1})">←</button>`;for(let i=1;i<=totalPages;i++)buttons+=`<button class="pageBtn ${i===dealPage?"active":""}" onclick="changeDealPage(${i})">${i}</button>`;buttons+=`<button class="pageBtn" ${dealPage===totalPages?"disabled":""} onclick="changeDealPage(${dealPage+1})">→</button>`;p.innerHTML=buttons;
 }
 window.changeDealPage=n=>{dealPage=n;renderDeals();window.scrollTo({top:0,behavior:"smooth"})};
@@ -133,7 +243,41 @@ async function loadSuperAdmin(){
 window.changeRole=async id=>{try{await api(`/api/super/users/${id}/role`,{method:"PATCH",body:JSON.stringify({role:$("role-"+id).value})});toast("Role updated");await loadSuperAdmin()}catch(e){toast(e.message)}};
 window.changeAccess=async(id,status)=>{const reason=status==="active"?"":(prompt("Optional reason:")||"");try{await api(`/api/super/users/${id}/status`,{method:"PATCH",body:JSON.stringify({status,reason})});toast("Access updated");await loadSuperAdmin()}catch(e){toast(e.message)}};
 
+
+$("reportToggle").onclick=()=>$("reportPanel").classList.toggle("show");
+$("reportClose").onclick=()=>$("reportPanel").classList.remove("show");
+$("reportSubmit").onclick=async()=>{
+  $("reportMsg").textContent="";
+  try{
+    const x=await api("/api/reports",{method:"POST",body:JSON.stringify({title:$("reportTitle").value,description:$("reportDescription").value})});
+    $("reportMsg").textContent=`Submitted as ticket #${x.report.id}`;
+    $("reportTitle").value="";$("reportDescription").value="";
+    toast(`Report #${x.report.id} submitted`);
+    setTimeout(()=>$("reportPanel").classList.remove("show"),900);
+  }catch(e){$("reportMsg").textContent=e.message}
+};
+async function loadUserReports(){
+  if(!["admin","super_admin"].includes(currentUser?.role))return;
+  const x=await api("/api/admin/reports?limit=200"),rows=x.reports||[];
+  $("userReportRows").innerHTML=rows.length?rows.map(t=>`<div class="ticketRow">
+    <div><strong>#${t.id} · ${t.title}</strong><small>${t.reporterEmail||"Unknown user"} · ${new Date(t.createdAt).toLocaleString()}</small></div>
+    <div class="ticketMeta"><span class="pill">${t.status}</span>${t.assignedTo?`<span class="pill">Assigned: ${t.assignedTo}</span>`:""}</div>
+    <p class="muted">${String(t.description||"").replace(/</g,"&lt;")}</p>
+    <input id="ticketNote-${t.id}" class="ticketNote" placeholder="Admin note" value="${String(t.adminNote||"").replace(/"/g,"&quot;")}">
+    <div class="ticketActions">
+      <button class="btn" onclick="updateTicket('${t.id}','acknowledged')">Acknowledge</button>
+      <button class="btn primary" onclick="updateTicket('${t.id}','resolved')">Resolve</button>
+      <button class="btn" onclick="updateTicket('${t.id}','open')">Reopen</button>
+    </div>
+  </div>`).join(""):'<div class="message">No user reports submitted.</div>';
+}
+window.updateTicket=async(id,status)=>{try{
+  await api(`/api/admin/reports/${id}`,{method:"PATCH",body:JSON.stringify({status,adminNote:$("ticketNote-"+id)?.value||""})});
+  toast("Ticket updated");await loadUserReports();
+}catch(e){toast(e.message)}};
+
 async function loadAdmin(){
+ await loadUserReports();
  const [st,errs,users,audit]=await Promise.all([api("/api/status"),api("/api/admin/errors"),api("/api/admin/users"),api("/api/admin/audit")]);
  const health=[["SerpApi",st.apiConfigured],["Email",st.emailConfigured],["SMS",st.smsConfigured],["Cron",st.cronConfigured],["Database",st.database==="PostgreSQL"]];
  $("adminHealth").innerHTML=health.map(([n,ok])=>`<div class="panel metric"><span class="muted tiny">${n}</span><strong>${ok?"✓ Ready":"⚠ Setup"}</strong></div>`).join("");

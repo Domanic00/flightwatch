@@ -170,3 +170,31 @@ SerpApi's Google Travel Explore API supports outbound/return dates, travel class
 The master login now accepts the email configured in `SUPER_ADMIN_EMAIL` together with `APP_PASSWORD`.
 For backward compatibility, `admin` (and a blank email) also remain valid master usernames.
 The first-time setup button is renamed to **First-time account setup**.
+
+## V6.1 UI polish
+- Restyles all advanced filters to match the existing FlightWatch dark UI.
+- Search inputs, date pickers, cabin/stops dropdowns, destination search, and airline search now use the same border, background, spacing, and focus treatment as the original controls.
+- Destination result cards now maintain a consistent two-row visual footprint.
+- When only one distinct fare is returned for a destination, the second row becomes a subtle informational placeholder rather than leaving an awkward empty card area.
+
+### Roadmap: Admin custom email broadcasts
+Add an Admin/Super Admin communication tool that can send a custom email to:
+- one selected user,
+- multiple selected users,
+- a group,
+- all active users.
+
+Planned safeguards:
+- recipient preview before send,
+- subject/body editor,
+- test-send to self,
+- audit event for every broadcast,
+- delivery status / failure reporting,
+- Super Admin-only option for "all users" if desired.
+
+## V6.1.1 User issue reporting
+- Adds a bottom-right **Report an issue** control for all signed-in users.
+- Users provide a title and description; submissions become persistent tickets in Neon.
+- Admins and Super Admins review tickets inside **Admin → Error Center → User-submitted reports**.
+- Admins can acknowledge, resolve, reopen, and add an internal note.
+- Every user ticket creation/update is written to the audit trail.
