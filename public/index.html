@@ -19,6 +19,13 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 .accountBadge span{display:block;color:#7f94b3;font-size:11px;text-transform:capitalize;margin-top:2px}
 @media(max-width:760px){.accountBadge{position:static;margin-top:10px}}
 
+
+.filterWide{display:flex;flex-direction:column;gap:5px;min-width:150px}.filterWide label{font-size:11px;font-weight:800;color:var(--muted)}
+.destinationGroup{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:14px;overflow:hidden}
+.destinationHead{padding:14px 16px;background:var(--surface2);display:flex;justify-content:space-between;align-items:center}.destinationHead h3{margin:0}
+.airlineOption{padding:12px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.5fr .8fr .8fr auto;gap:12px;align-items:center}
+@media(max-width:760px){.airlineOption{grid-template-columns:1fr}.filterWide{width:100%}}
+
 </style></head><body>
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
@@ -31,11 +38,17 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <p id="loginError" class="tiny" style="color:var(--red);margin-bottom:0"></p>
 </div></div>
 <div class="shell"><aside class="sidebar"><div class="logo"><span>✈</span>FlightWatch</div><nav class="nav">
-<button data-page="discover" class="active">Discover</button><button data-page="tracked">Tracked flights</button><button data-page="history">Price history</button><button data-page="watchlists">Watchlists</button><button data-page="alerts">Alerts</button><button data-page="profile">Profile</button><button data-page="system" data-admin-only="true">System status</button><button data-page="admin" data-admin-only="true">Admin</button></nav><div id="accountBadge" class="accountBadge"><strong id="accountEmail">—</strong><span id="accountRole">—</span></div><button id="sidebarLogout" class="sidebarLogout">↪ Sign out</button><div class="sideFoot">MCO + MIA<br>2 adults · Round trip<br>United States</div></aside>
+<button data-page="discover" class="active">Discover</button><button data-page="tracked">Tracked flights</button><button data-page="history">Price history</button><button data-page="watchlists">Watchlists</button><button data-page="alerts">Alerts</button><button data-page="profile">Profile</button><button data-page="groups">Groups</button><button data-page="system" data-admin-only="true">System status</button><button data-page="admin" data-admin-only="true">Admin</button></nav><div id="accountBadge" class="accountBadge"><strong id="accountEmail">—</strong><span id="accountRole">—</span></div><button id="sidebarLogout" class="sidebarLogout">↪ Sign out</button><div class="sideFoot">MCO + MIA<br>2 adults · Round trip<br>United States</div></aside>
 <main class="main"><header class="top"><strong id="pageTitle">Discover</strong><div class="topRight"><span class="dot"></span><span id="apiStatus" class="tiny muted">Checking…</span><button id="theme" class="btn">◐ System</button></div></header><div class="content">
 
 <section id="discover" class="page active"><div class="hero"><div><div class="eyebrow">LIVE U.S. DEAL DISCOVERY</div><h1>Cheap trips, without the searching.</h1><p>Explore low-cost round trips from Orlando and Miami, then save the routes worth watching.</p></div><button id="refresh" class="btn">↻ Refresh live deals</button></div>
-<div class="panel search"><div class="field"><label>Departure</label><select id="origin"><option value="BOTH">MCO + MIA</option><option value="MCO">MCO only</option><option value="MIA">MIA only</option></select></div><div class="field"><label>Travelers</label><select id="travelers"><option value="1">1 adult</option><option value="2" selected>2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option></select></div><div class="field"><label>Trip type</label><select disabled><option>Round trip · Economy</option></select></div><button id="find" class="btn primary">Find deals</button></div>
+<div class="panel search"><div class="field"><label>Departure</label><select id="origin"><option value="BOTH">MCO + MIA</option><option value="MCO">MCO only</option><option value="MIA">MIA only</option></select></div><div class="field"><label>Travelers</label><select id="travelers"><option value="1">1 adult</option><option value="2" selected>2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option></select></div><div class="field"><label>Trip type</label><select disabled><option>Round trip · Economy</option></select></div><div class="filterWide"><label>Cabin</label><select id="travelClass"><option value="1">Economy</option><option value="2">Premium economy</option><option value="3">Business</option><option value="4">First</option></select></div>
+<div class="filterWide"><label>Depart</label><input id="outboundDate" type="date"></div>
+<div class="filterWide"><label>Return</label><input id="returnDate" type="date"></div>
+<div class="filterWide"><label>Stops</label><select id="stopsFilter"><option value="">Any stops</option><option value="1">Nonstop</option><option value="2">≤ 1 stop</option><option value="3">≤ 2 stops</option></select></div>
+<div class="filterWide"><label>Destination / airport</label><input id="destinationSearch" placeholder="Search city or airport"></div>
+<div class="filterWide"><label>Airline</label><input id="airlineSearch" placeholder="Search airline or IATA code"></div>
+<button id="find" class="btn primary">Find deals</button></div>
 <div class="stats"><div class="stat"><label>Best fare</label><strong id="best">$—</strong><small class="muted">current search</small></div><div class="stat"><label>U.S. deals</label><strong id="dealCount">—</strong><small class="muted">current search</small></div><div class="stat"><label>Nonstop</label><strong id="nonstop">—</strong><small class="muted">available results</small></div><div class="stat"><label>Tracked</label><strong id="trackedCount">—</strong><small class="muted">persistent routes</small></div></div>
 <div class="sectionHead"><div><h2>Best U.S. deals</h2><p id="lastChecked">Waiting for live data.</p></div><select id="sort" class="btn"><option value="price">Lowest price</option><option value="destination">Destination A–Z</option><option value="duration">Shortest flight</option></select></div><div id="deals" class="grid"><div class="message">Loading live deals…</div></div><div id="dealPagination" class="pagination"></div></section>
 
@@ -54,6 +67,12 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <section id="system" class="page"><div class="hero"><div><div class="eyebrow">DIAGNOSTICS</div><h1>System status</h1><p>Verify SerpApi, database storage, snapshots, watchlists, and private access.</p></div></div><div id="systemCards" class="cards3"></div><div class="panel" style="margin-top:14px"><button id="logout" class="btn danger">Sign out</button></div></section>
 
 
+
+<section id="groups" class="page"><div class="hero"><div><div class="eyebrow">SHARED TRAVEL</div><h1>Groups</h1><p>Your account stays private by default. Create a group when you intentionally want to share tracked flights or watchlists.</p></div></div>
+<div class="panel"><div class="sectionHead"><div><h2>Your groups</h2><p>Create a household or travel group and invite another FlightWatch account.</p></div></div>
+<div class="formGrid"><div class="field"><label>Group name</label><input id="groupName" placeholder="Family trips"></div></div><button id="createGroup" class="btn primary" style="margin-top:10px">Create group</button><div id="groupRows" style="margin-top:12px"></div></div>
+<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Invitations</h2><p>Invitations sent to your login email appear here.</p></div></div><div id="inviteRows"></div></div></section>
+
 <section id="admin" class="page"><div class="hero"><div><div class="eyebrow">ADMIN & DIAGNOSTICS</div><h1>Admin Center</h1><p>Persistent errors, provider diagnostics, beta access, and audit history—all inside FlightWatch.</p></div><button id="adminRefresh" class="btn">↻ Refresh</button></div>
 <div class="cards3" id="adminHealth"></div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Error Center</h2><p>Errors remain here until acknowledged or resolved.</p></div></div><div id="errorRows"></div></div>
@@ -65,31 +84,21 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 let deals=[],tracked=[],profile={},watchlists=[],dealPage=1,currentUser=null;const DEALS_PER_PAGE=10;const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(n||0)),date=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"Flexible";
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}async function api(url,opt={}){const r=await fetch(url,{headers:{"Content-Type":"application/json",...(opt.headers||{})},...opt});const d=await r.json().catch(()=>({}));if(r.status===401){$("login").classList.add("show");throw new Error("Authentication required")}if(!r.ok)throw new Error(d.error||"Request failed");return d}
 function applyTheme(t){let a=t;if(t==="system")a=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.dataset.theme=a;localStorage.setItem("fw-theme",t);$("theme").textContent=t==="system"?"◐ System":t==="dark"?"☾ Dark":"☀ Light"}applyTheme(localStorage.getItem("fw-theme")||"system");$("theme").onclick=()=>{const c=localStorage.getItem("fw-theme")||"system";applyTheme(c==="system"?"light":c==="light"?"dark":"system")};
-document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-page]").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent;if(b.dataset.page==="system")loadStatus();if(b.dataset.page==="alerts")renderAlerts();if(b.dataset.page==="admin")loadAdmin()});
+document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-page]").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent;if(b.dataset.page==="system")loadStatus();if(b.dataset.page==="alerts")renderAlerts();if(b.dataset.page==="admin")loadAdmin();if(b.dataset.page==="groups")loadGroups()});
 async function auth(){const s=await fetch("/api/auth/status").then(r=>r.json());if(s.protected&&!s.authenticated){$("login").classList.add("show");return false}return true}$("loginBtn").onclick=async()=>{try{const x=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("loginEmail").value,password:$("loginPassword").value})});$("login").classList.remove("show");$("loginError").textContent="";applyUserUI(x.user);await bootstrap()}catch(e){$("loginError").textContent=e.message}};
 function renderDeals(){
-  let rows=[...deals],s=$("sort").value;
-  if(s==="price")rows.sort((a,b)=>a.price-b.price);
-  if(s==="destination")rows.sort((a,b)=>a.destination.localeCompare(b.destination));
-  if(s==="duration")rows.sort((a,b)=>(a.flightDuration||99999)-(b.flightDuration||99999));
-  const totalPages=Math.max(1,Math.ceil(rows.length/DEALS_PER_PAGE));
-  if(dealPage>totalPages)dealPage=totalPages;
-  const start=(dealPage-1)*DEALS_PER_PAGE;
-  const pageRows=rows.slice(start,start+DEALS_PER_PAGE);
-  $("deals").innerHTML=pageRows.length?pageRows.map(d=>{
-    const stop=d.stops===0?"Nonstop":d.stops===1?"1 stop":d.stops!=null?d.stops+" stops":"Stops n/a",saved=tracked.some(t=>t.id===d.id);
-    return `<article class="deal"><div class="dealBody"><div class="dealTop"><div><div class="route">${d.departureAirport} → ${d.arrivalAirport||"USA"}</div><div class="city">${d.destination}${d.airline?" · "+d.airline:""}</div></div><div class="price"><strong>${money(d.price)}</strong><small>listed round-trip fare</small></div></div><div class="pills"><span class="pill good">${stop}</span><span class="pill">${date(d.startDate)} – ${date(d.endDate)}</span>${d.flightDuration?`<span class="pill">${Math.floor(d.flightDuration/60)}h ${d.flightDuration%60}m</span>`:""}</div></div><div class="dealActions">${d.flightLink?`<a class="link" target="_blank" rel="noopener" href="${d.flightLink}">View on Google Travel ↗</a>`:"<span></span>"}<button class="btn ${saved?"":"primary"}" onclick="toggleTrack('${d.id}')">${saved?"✓ Tracking":"Track price"}</button></div></article>`
-  }).join(""):'<div class="message">No U.S. deals returned.</div>';
-  const p=$("dealPagination");
-  if(!p)return;
-  if(rows.length<=DEALS_PER_PAGE){p.innerHTML="";return}
-  let buttons=`<button class="pageBtn" ${dealPage===1?"disabled":""} onclick="changeDealPage(${dealPage-1})">←</button>`;
-  for(let i=1;i<=totalPages;i++)buttons+=`<button class="pageBtn ${i===dealPage?"active":""}" onclick="changeDealPage(${i})">${i}</button>`;
-  buttons+=`<button class="pageBtn" ${dealPage===totalPages?"disabled":""} onclick="changeDealPage(${dealPage+1})">→</button>`;
-  p.innerHTML=buttons;
+  let rows=[...deals],s=$("sort").value,dq=($("destinationSearch")?.value||"").trim().toLowerCase(),aq=($("airlineSearch")?.value||"").trim().toLowerCase();
+  if(dq)rows=rows.filter(d=>(d.destination+" "+(d.arrivalAirport||"")).toLowerCase().includes(dq));
+  if(aq)rows=rows.filter(d=>(d.airline||"").toLowerCase().includes(aq));
+  if(s==="price")rows.sort((a,b)=>a.price-b.price);if(s==="destination")rows.sort((a,b)=>a.destination.localeCompare(b.destination));if(s==="duration")rows.sort((a,b)=>(a.flightDuration||99999)-(b.flightDuration||99999));
+  const groups=new Map();for(const d of rows){const k=d.destination||d.arrivalAirport||"Destination";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d)}
+  const dests=[...groups.entries()],totalPages=Math.max(1,Math.ceil(dests.length/DEALS_PER_PAGE));if(dealPage>totalPages)dealPage=totalPages;
+  const page=dests.slice((dealPage-1)*DEALS_PER_PAGE,dealPage*DEALS_PER_PAGE);
+  $("deals").innerHTML=page.length?page.map(([dest,opts])=>`<div class="destinationGroup"><div class="destinationHead"><h3>${dest}</h3><span class="muted">${opts.length} option${opts.length===1?"":"s"} · from ${money(Math.min(...opts.map(x=>x.price)))}</span></div>${opts.map(d=>`<div class="airlineOption"><div><strong>${d.airline||"Airline not listed"}</strong><div class="tiny muted">${d.departureAirport} → ${d.arrivalAirport||"USA"} · ${date(d.startDate)} – ${date(d.endDate)}</div></div><div><strong>${money(d.price)}</strong><div class="tiny muted">round trip</div></div><div class="tiny">${d.stops===0?"Nonstop":d.stops===1?"1 stop":d.stops!=null?d.stops+" stops":"Stops n/a"}${d.flightDuration?` · ${Math.floor(d.flightDuration/60)}h ${d.flightDuration%60}m`:""}</div><div><button class="btn primary" onclick="toggleTrack('${d.id}')">${tracked.some(t=>t.id===d.id)?"✓ Tracking":"Track"}</button>${d.flightLink?` <a class="link" target="_blank" rel="noopener" href="${d.flightLink}">View ↗</a>`:""}</div></div>`).join("")}</div>`).join(""):'<div class="message">No matching U.S. destinations found.</div>';
+  const p=$("dealPagination");if(dests.length<=DEALS_PER_PAGE){p.innerHTML="";return}let buttons=`<button class="pageBtn" ${dealPage===1?"disabled":""} onclick="changeDealPage(${dealPage-1})">←</button>`;for(let i=1;i<=totalPages;i++)buttons+=`<button class="pageBtn ${i===dealPage?"active":""}" onclick="changeDealPage(${i})">${i}</button>`;buttons+=`<button class="pageBtn" ${dealPage===totalPages?"disabled":""} onclick="changeDealPage(${dealPage+1})">→</button>`;p.innerHTML=buttons;
 }
 window.changeDealPage=n=>{dealPage=n;renderDeals();window.scrollTo({top:0,behavior:"smooth"})};
-async function loadDeals(){try{$("deals").innerHTML='<div class="message">Searching live U.S. fares…</div>';const d=await api("/api/deals?origin="+$("origin").value+"&adults="+($("travelers")?.value||2));deals=d.deals;$("best").textContent=deals.length?money(Math.min(...deals.map(x=>x.price))):"$—";$("dealCount").textContent=deals.length;$("nonstop").textContent=deals.filter(x=>x.stops===0).length;$("lastChecked").textContent=`${d.source} · checked ${new Date(d.fetchedAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`;renderDeals();await loadTracked()}catch(e){$("deals").innerHTML=`<div class="message">${e.message}</div>`}}$("find").onclick=$("refresh").onclick=()=>{dealPage=1;loadDeals()};$("sort").onchange=()=>{dealPage=1;renderDeals()};
+async function loadDeals(){try{$("deals").innerHTML='<div class="message">Searching live U.S. fares…</div>';const d=await api("/api/deals?"+new URLSearchParams({origin:$("origin").value,adults:$("travelers")?.value||2,travelClass:$("travelClass")?.value||1,outboundDate:$("outboundDate")?.value||"",returnDate:$("returnDate")?.value||"",stops:$("stopsFilter")?.value||""}).toString());deals=d.deals;$("best").textContent=deals.length?money(Math.min(...deals.map(x=>x.price))):"$—";$("dealCount").textContent=deals.length;$("nonstop").textContent=deals.filter(x=>x.stops===0).length;$("lastChecked").textContent=`${d.source} · checked ${new Date(d.fetchedAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`;renderDeals();await loadTracked()}catch(e){$("deals").innerHTML=`<div class="message">${e.message}</div>`}}$("find").onclick=$("refresh").onclick=()=>{dealPage=1;loadDeals()};$("sort").onchange=()=>{dealPage=1;renderDeals()};
 async function loadTracked(){tracked=await api("/api/tracked");$("trackedCount").textContent=tracked.length;$("trackedRows").innerHTML=tracked.length?tracked.map(d=>`<div class="listRow"><div><strong>${d.departureAirport} → ${d.arrivalAirport||d.destination}</strong><small>${d.destination} · ${date(d.startDate)}–${date(d.endDate)}${d.airline?" · "+d.airline:""}</small></div><button class="btn danger" onclick="removeTrack('${d.id}')">Remove</button></div>`).join(""):'<div class="message">No tracked flights yet.</div>';renderDeals()}window.toggleTrack=async id=>{const d=deals.find(x=>x.id===id),exists=tracked.some(x=>x.id===id);if(exists)await api("/api/tracked/"+encodeURIComponent(id),{method:"DELETE"});else await api("/api/tracked",{method:"POST",body:JSON.stringify(d)});await loadTracked();toast(exists?"Removed":"Tracking saved")};window.removeTrack=async id=>{await api("/api/tracked/"+encodeURIComponent(id),{method:"DELETE"});await loadTracked()};
 
 function enforceProfileIdentity(){
@@ -149,6 +158,20 @@ function applyUserUI(user){
     }
   }
 }
+
+
+if($("destinationSearch"))$("destinationSearch").oninput=()=>{dealPage=1;renderDeals()};
+if($("airlineSearch"))$("airlineSearch").oninput=()=>{dealPage=1;renderDeals()};
+
+
+async function loadGroups(){
+ const x=await api("/api/groups"),gs=x.groups||[],inv=x.invites||[];
+ $("groupRows").innerHTML=gs.length?gs.map(g=>`<div class="listRow"><div><strong>${g.name}</strong><small>${g.role} · ${g.members} member${g.members==1?"":"s"}</small></div>${g.role==="owner"?`<div style="display:flex;gap:6px"><input id="invite-${g.id}" placeholder="email@example.com" style="min-width:210px"><button class="btn" onclick="inviteGroup('${g.id}')">Invite</button></div>`:""}</div>`).join(""):'<div class="message">No groups yet.</div>';
+ $("inviteRows").innerHTML=inv.length?inv.map(i=>`<div class="listRow"><div><strong>${i.name}</strong><small>Group invitation</small></div><button class="btn primary" onclick="acceptGroup('${i.token}')">Accept</button></div>`).join(""):'<div class="message">No pending invitations.</div>';
+}
+$("createGroup").onclick=async()=>{try{await api("/api/groups",{method:"POST",body:JSON.stringify({name:$("groupName").value})});$("groupName").value="";await loadGroups();toast("Group created")}catch(e){toast(e.message)}};
+window.inviteGroup=async id=>{try{await api(`/api/groups/${id}/invite`,{method:"POST",body:JSON.stringify({email:$("invite-"+id).value})});toast("Invitation created");await loadGroups()}catch(e){toast(e.message)}};
+window.acceptGroup=async token=>{try{await api("/api/groups/accept",{method:"POST",body:JSON.stringify({token})});toast("Group joined");await loadGroups()}catch(e){toast(e.message)}};
 
 async function bootstrap(){await Promise.all([loadTracked(),loadProfile(),loadWatch()]);$("apiStatus").textContent="Ready";renderAlerts();loadDeals()}auth().then(ok=>{if(ok)bootstrap()});
 </script></body></html>

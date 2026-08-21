@@ -145,3 +145,15 @@ Fixes a duplicated malformed logout JavaScript block introduced in V5.2 that pre
 - Admin and System Status navigation are hidden from testers.
 - `/api/admin/*` and `/api/status` are server-side admin-only.
 - Admin profile remains unchanged and continues using the original profile record.
+
+## V6 all-in-one
+- Full private ownership for tracked flights, watchlists, profiles, and alert reads. Existing pre-V6 rows migrate to the admin owner.
+- Shared price snapshots remain global system data intentionally.
+- Groups: create groups, invite existing tester emails, accept invitations, and provide a foundation for explicitly shared tracked routes/watchlists.
+- Advanced SerpApi-backed search filters: travelers, exact outbound/return dates, cabin class, stops.
+- Searchable destination and airline filtering in the UI.
+- Destination-first results: destinations are the primary cards, with airline/fare options nested underneath.
+- Pagination is 10 destinations per page.
+- MCO/MIA remain the only departure airports and U.S. destinations remain the product scope.
+
+SerpApi's Google Travel Explore API supports outbound/return dates, travel class, adults, stops, arrival IDs, airline inclusion, and maximum duration. V6 uses the supported server-side parameters for the primary filters and client-side search for clean destination/airline discovery.

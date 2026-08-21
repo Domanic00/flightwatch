@@ -22,20 +22,28 @@ app.post("/api/auth/setup",async(q,r)=>{const email=String(q.body?.email||"").tr
 app.post("/api/auth/logout",(q,r)=>{q.session=null;r.json({ok:true})});
 app.use("/api",(q,r,n)=>{if(q.path.startsWith("/auth/")||q.path==="/health"||q.path.startsWith("/cron/"))return n();if(!q.session?.user)return r.status(401).json({error:"Authentication required."});if((q.path.startsWith("/admin/")||q.path==="/status")&&!isAdmin(q))return r.status(403).json({error:"Admin only"});n()});
 
-async function explore(origin,adults=2){
-  const p=new URLSearchParams({engine:"google_travel_explore",departure_id:origin,gl:"us",hl:"en",currency:"USD",type:"1",adults:String(adults),api_key:process.env.SERPAPI_KEY});
+async function explore(origin,opts={}){
+  const p=new URLSearchParams({engine:"google_travel_explore",departure_id:origin,gl:"us",hl:"en",currency:"USD",type:"1",adults:String(opts.adults||2),travel_class:String(opts.travelClass||1),api_key:process.env.SERPAPI_KEY});
+  if(opts.outboundDate)p.set("outbound_date",opts.outboundDate);
+  if(opts.returnDate)p.set("return_date",opts.returnDate);
+  if(opts.arrivalId)p.set("arrival_id",opts.arrivalId);
+  if(opts.stops)p.set("stops",String(opts.stops));
+  if(opts.airlines)p.set("include_airlines",opts.airlines);
+  if(opts.maxDuration)p.set("max_duration",String(opts.maxDuration));
   const res=await fetch("https://serpapi.com/search.json?"+p),d=await res.json();
   if(!res.ok||d.error)throw new Error(d.error||"SerpApi failed");
   return d
 }
 function norm(d,o,i){return{id:`${o}-${d.destination_airport?.code||d.arrival_airport?.code||d.destination_id||i}-${d.start_date||i}`,destination:d.name||"Unknown",country:d.country||"",price:Number(d.flight_price??d.price??0),flightLink:d.link||d.flight_link||null,startDate:d.start_date||null,endDate:d.end_date||null,departureAirport:o,arrivalAirport:d.destination_airport?.code||d.arrival_airport?.code||null,flightDuration:d.flight_duration?Number(d.flight_duration):null,stops:d.number_of_stops??d.stops??null,airline:d.airline||null,hotelPrice:d.hotel_price?Number(d.hotel_price):null}}
-async function getDeals(origins=["MCO","MIA"],adults=2){
-  adults=Math.min(6,Math.max(1,Number(adults)||2));
-  const rs=await Promise.all(origins.map(o=>explore(o,adults)));let deals=[];
-  rs.forEach((x,i)=>deals.push(...(x.destinations||x.flights||[]).map((d,j)=>norm(d,origins[i],j))));
-  deals=deals.filter(d=>(d.country||"").trim().toLowerCase()==="united states"&&d.price>0);
-  const u=new Map();
-  for(const d of deals){const k=`${d.departureAirport}|${d.arrivalAirport||d.destination}|${d.startDate}|${d.endDate}`;if(!u.has(k)||d.price<u.get(k).price)u.set(k,d)}
+async function getDeals(origins=["MCO","MIA"],opts={}){
+  opts.adults=Math.min(6,Math.max(1,Number(opts.adults)||2));
+  const rs=await Promise.all(origins.map(o=>explore(o,opts)));let deals=[];
+  rs.forEach((x,i)=>{
+    const source=(x.flights&&x.flights.length?x.flights:x.destinations)||[];
+    deals.push(...source.map((d,j)=>norm({...d,start_date:d.start_date||x.start_date,end_date:d.end_date||x.end_date},origins[i],j)))
+  });
+  deals=deals.filter(d=>(d.country||"United States").trim().toLowerCase()==="united states"&&d.price>0);
+  const u=new Map();for(const d of deals){const k=`${d.departureAirport}|${d.arrivalAirport||d.destination}|${d.startDate}|${d.endDate}|${d.airline||""}`;if(!u.has(k)||d.price<u.get(k).price)u.set(k,d)}
   return [...u.values()].sort((a,b)=>a.price-b.price)
 }
 
@@ -123,18 +131,19 @@ async function monitoringRun({deliver=true}={}){
 }
 
 app.get("/api/health",(q,r)=>r.json({ok:true,apiConfigured:!!process.env.SERPAPI_KEY,database:db.usePostgres?"postgres":"local",v:"4.0.0"}));
-app.get("/api/deals",async(q,r)=>{try{if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:["MCO","MIA"].includes(req)?[req]:["MCO","MIA"];const adults=Math.min(6,Math.max(1,Number(q.query.adults)||2));const deals=await getDeals(origins,adults);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"})}catch(e){r.status(500).json({error:e.message})}});
-app.get("/api/profile",async(q,r)=>r.json(await db.getUserProfile(q.session?.user)));app.put("/api/profile",async(q,r)=>r.json(await db.saveUserProfile(q.session?.user,q.body||{})));
-app.get("/api/tracked",async(q,r)=>r.json(await db.getTracked()));app.post("/api/tracked",async(q,r)=>r.json(await db.addTracked(q.body||{})));app.delete("/api/tracked/:id",async(q,r)=>{await db.removeTracked(q.params.id);r.json({ok:true})});
-app.get("/api/watchlists",async(q,r)=>r.json(await db.getWatchlists()));app.post("/api/watchlists",async(q,r)=>r.json(await db.addWatchlist(q.body||{})));app.delete("/api/watchlists/:id",async(q,r)=>{await db.removeWatchlist(q.params.id);r.json({ok:true})});
-app.get("/api/history",async(q,r)=>r.json(await db.history(q.query.origin||"",String(q.query.destinationCode||"").toUpperCase(),q.query.limit)));
-app.get("/api/alerts",async(q,r)=>r.json(await db.getAlerts(q.query.limit||100)));
-app.post("/api/alerts/test",async(q,r)=>{try{await db.audit("notification_test","Admin ran notification test");
-  const profile=await db.getProfile(),fake={departureAirport:"MCO",arrivalAirport:"TEST",destination:"FlightWatch Test",price:99,startDate:null,endDate:null,stops:0,flightLink:null},alert={score:"TEST",reason:"Your FlightWatch notification settings are working."};
-  const [emailStatus,smsStatus]=await Promise.all([sendEmail(profile,fake,alert),sendSms(profile,fake,alert)]);
-  r.json({emailStatus,smsStatus});
-}catch(e){r.status(500).json({error:e.message})}});
-app.post("/api/monitor/run",async(q,r)=>{try{const x=await monitoringRun({deliver:false});await db.audit("manual_monitor_run",JSON.stringify({deals:x.deals,newAlerts:x.newAlerts}));r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
+app.get("/api/deals",async(q,r)=>{try{
+  if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});
+  const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:["MCO","MIA"].includes(req)?[req]:["MCO","MIA"];
+  const opts={adults:q.query.adults,travelClass:q.query.travelClass||1,outboundDate:q.query.outboundDate||"",returnDate:q.query.returnDate||"",arrivalId:String(q.query.arrivalId||"").toUpperCase(),stops:q.query.stops||"",airlines:String(q.query.airlines||"").toUpperCase(),maxDuration:q.query.maxDuration||""};
+  if((opts.outboundDate&&!opts.returnDate)||(!opts.outboundDate&&opts.returnDate))return r.status(400).json({error:"For round trips, choose both departure and return dates."});
+  const deals=await getDeals(origins,opts);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"})
+}catch(e){await db.logError({service:"SerpApi",code:"SEARCH_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
+
+
+app.get("/api/groups",async(q,r)=>r.json({groups:await db.getGroups(q.session.user),invites:await db.getGroupInvites(q.session.user)}));
+app.post("/api/groups",async(q,r)=>{try{const g=await db.createGroup(q.body?.name,q.session.user);await db.audit("group_created",g.name,q.session.user.email);r.json(g)}catch(e){r.status(400).json({error:e.message})}});
+app.post("/api/groups/:id/invite",async(q,r)=>{try{const x=await db.inviteToGroup(q.params.id,q.body?.email,q.session.user);await db.audit("group_invite_sent",q.body?.email,q.session.user.email);r.json({ok:true,inviteId:x.id})}catch(e){r.status(400).json({error:e.message})}});
+app.post("/api/groups/accept",async(q,r)=>{try{r.json(await db.acceptGroupInvite(q.body?.token,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
 
 app.get("/api/admin/errors",async(q,r)=>r.json(await db.getErrors(q.query.limit||100)));
 app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`);r.json({ok:true})});
