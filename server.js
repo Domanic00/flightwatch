@@ -126,12 +126,20 @@ app.get("/api/tracked",async(q,r)=>r.json(await db.getTracked()));app.post("/api
 app.get("/api/watchlists",async(q,r)=>r.json(await db.getWatchlists()));app.post("/api/watchlists",async(q,r)=>r.json(await db.addWatchlist(q.body||{})));app.delete("/api/watchlists/:id",async(q,r)=>{await db.removeWatchlist(q.params.id);r.json({ok:true})});
 app.get("/api/history",async(q,r)=>r.json(await db.history(q.query.origin||"",String(q.query.destinationCode||"").toUpperCase(),q.query.limit)));
 app.get("/api/alerts",async(q,r)=>r.json(await db.getAlerts(q.query.limit||100)));
-app.post("/api/alerts/test",async(q,r)=>{try{
+app.post("/api/alerts/test",async(q,r)=>{try{await db.audit("notification_test","Admin ran notification test");
   const profile=await db.getProfile(),fake={departureAirport:"MCO",arrivalAirport:"TEST",destination:"FlightWatch Test",price:99,startDate:null,endDate:null,stops:0,flightLink:null},alert={score:"TEST",reason:"Your FlightWatch notification settings are working."};
   const [emailStatus,smsStatus]=await Promise.all([sendEmail(profile,fake,alert),sendSms(profile,fake,alert)]);
   r.json({emailStatus,smsStatus});
 }catch(e){r.status(500).json({error:e.message})}});
-app.post("/api/monitor/run",async(q,r)=>{try{r.json(await monitoringRun({deliver:false}))}catch(e){r.status(500).json({error:e.message})}});
+app.post("/api/monitor/run",async(q,r)=>{try{const x=await monitoringRun({deliver:false});await db.audit("manual_monitor_run",JSON.stringify({deals:x.deals,newAlerts:x.newAlerts}));r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
+
+app.get("/api/admin/errors",async(q,r)=>r.json(await db.getErrors(q.query.limit||100)));
+app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`);r.json({ok:true})});
+app.get("/api/admin/audit",async(q,r)=>r.json(await db.getAudit(q.query.limit||100)));
+app.get("/api/admin/users",async(q,r)=>r.json(await db.getBetaUsers()));
+app.post("/api/admin/users",async(q,r)=>{try{await db.addBetaUser(q.body?.email,q.body?.role||"tester");await db.audit("beta_user_added",q.body?.email||"");r.json({ok:true})}catch(e){r.status(400).json({error:e.message})}});
+app.delete("/api/admin/users/:id",async(q,r)=>{await db.removeBetaUser(q.params.id);await db.audit("beta_user_removed",q.params.id);r.json({ok:true})});
+
 app.get("/api/status",async(q,r)=>r.json({...await db.status(),apiConfigured:!!process.env.SERPAPI_KEY,protectedMode,emailConfigured:!!process.env.RESEND_API_KEY,smsConfigured:!!(process.env.TWILIO_ACCOUNT_SID&&process.env.TWILIO_AUTH_TOKEN&&process.env.TWILIO_FROM_NUMBER),cronConfigured:!!process.env.CRON_SECRET}));
 
 // Secure endpoint intended for GitHub Actions / Render Cron.

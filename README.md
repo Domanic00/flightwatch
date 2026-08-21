@@ -106,3 +106,15 @@ No manual SQL is necessary. V4 runs `CREATE TABLE IF NOT EXISTS` at startup and 
 ## Important
 
 FlightWatch uses the fare values returned by Google Travel Explore. Always verify the final itinerary, traveler count, fees, and final booking price before purchasing.
+
+
+## V5 additions
+- In-app Admin Center
+- Persistent deduplicated provider/application errors
+- Acknowledge/resolve workflow
+- Provider health overview
+- Audit log
+- Lightweight beta tester allowlist
+- Twilio/Resend failures logged with provider response details
+
+Note: beta users are an administrative allowlist in V5.0; the existing private app password remains the authentication gate. Per-user passwords/invitation links are intentionally deferred so the personal-use architecture stays simple.
