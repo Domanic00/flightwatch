@@ -1,5 +1,6 @@
 const express=require("express"),path=require("path"),crypto=require("crypto"),cookieSession=require("cookie-session");require("dotenv").config();const db=require("./lib/storage");
 const app=express(),PORT=process.env.PORT||3000;app.use(express.json());app.use(cookieSession({name:"fw",keys:[process.env.SESSION_SECRET||"local-dev-secret"],maxAge:2592000000,httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production"}));
+app.set("trust proxy", 1);
 const protectedMode=Boolean(process.env.APP_PASSWORD);
 app.get("/api/auth/status",(q,r)=>r.json({protected:protectedMode,authenticated:!protectedMode||!!q.session?.authenticated}));
 app.post("/api/auth/login",(q,r)=>{if(!protectedMode){q.session.authenticated=true;return r.json({ok:true})}const a=Buffer.from(String(q.body?.password||"")),b=Buffer.from(String(process.env.APP_PASSWORD));if(a.length!==b.length||!crypto.timingSafeEqual(a,b))return r.status(401).json({error:"Incorrect password."});q.session.authenticated=true;r.json({ok:true})});
