@@ -198,3 +198,11 @@ Planned safeguards:
 - Admins and Super Admins review tickets inside **Admin → Error Center → User-submitted reports**.
 - Admins can acknowledge, resolve, reopen, and add an internal note.
 - Every user ticket creation/update is written to the audit trail.
+
+## V6.2
+- Rebrands FlightWatch to **Anywhere With You**.
+- Discover description is **Just us. Somewhere else.**
+- Advanced filters are collapsed by default; only the primary search row is shown initially.
+- Bottom-right disclosure control expands/collapses the remaining filters.
+- User-submitted reports now use a clean subject-only ticket list with a selectable detail pane.
+- Adds a Super Admin-only to-do list under Error Center with title, remarks, open/done status, and delete controls.

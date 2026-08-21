@@ -65,7 +65,7 @@ function quietNow(profile){
 function scoreDeal(price,stats){
   if(!stats||stats.count<2)return {score:"NEW",reason:"Meets your watchlist price threshold."};
   const avg=stats.avg,low=stats.low,drop=avg>0?(avg-price)/avg:0;
-  if(price<=low)return {score:"EXCEPTIONAL",reason:`At or below the lowest price FlightWatch has recorded for this route.`};
+  if(price<=low)return {score:"EXCEPTIONAL",reason:`At or below the lowest price Anywhere With You has recorded for this route.`};
   if(drop>=.25)return {score:"GREAT",reason:`${Math.round(drop*100)}% below the recent route average.`};
   if(drop>=.12)return {score:"GOOD",reason:`${Math.round(drop*100)}% below the recent route average.`};
   return {score:"MATCH",reason:"Meets your watchlist price threshold."}
@@ -80,9 +80,9 @@ async function sendEmail(profile,deal,alert){
   if(!process.env.RESEND_API_KEY)return "not_configured";
   try{
     const res=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({
-      from:process.env.RESEND_FROM||"FlightWatch <onboarding@resend.dev>",
+      from:process.env.RESEND_FROM||"Anywhere With You <onboarding@resend.dev>",
       to:[profile.email],
-      subject:`FlightWatch ${alert.score}: ${deal.departureAirport} → ${deal.arrivalAirport||deal.destination} for $${Math.round(deal.price)}`,
+      subject:`Anywhere With You ${alert.score}: ${deal.departureAirport} → ${deal.arrivalAirport||deal.destination} for $${Math.round(deal.price)}`,
       html:`<div style="font-family:Arial,sans-serif;max-width:600px"><h2>✈️ ${alert.score} flight deal</h2><p><strong>${deal.departureAirport} → ${deal.arrivalAirport||deal.destination}</strong> — ${deal.destination}</p><p style="font-size:28px;font-weight:bold">$${Math.round(deal.price)}</p><p>${alert.reason}</p><p>${deal.startDate||"Flexible"} → ${deal.endDate||"Flexible"}${deal.stops===0?" · Nonstop":""}</p>${deal.flightLink?`<p><a href="${deal.flightLink}">View on Google Travel</a></p>`:""}<p style="color:#666;font-size:12px">Always verify final pricing before booking.</p></div>`
     })});
     return res.ok?"sent":`failed_${res.status}`;
@@ -93,7 +93,7 @@ async function sendSms(profile,deal,alert){
   const sid=process.env.TWILIO_ACCOUNT_SID,token=process.env.TWILIO_AUTH_TOKEN,from=process.env.TWILIO_FROM_NUMBER;
   if(!sid||!token||!from)return "not_configured";
   try{
-    const body=new URLSearchParams({To:profile.phone,From:from,Body:`FlightWatch ${alert.score}: ${deal.departureAirport}→${deal.arrivalAirport||deal.destination} $${Math.round(deal.price)}. ${alert.reason}${deal.flightLink?" "+deal.flightLink:""}`});
+    const body=new URLSearchParams({To:profile.phone,From:from,Body:`Anywhere With You ${alert.score}: ${deal.departureAirport}→${deal.arrivalAirport||deal.destination} $${Math.round(deal.price)}. ${alert.reason}${deal.flightLink?" "+deal.flightLink:""}`});
     const res=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:"POST",headers:{"Authorization":"Basic "+Buffer.from(`${sid}:${token}`).toString("base64"),"Content-Type":"application/x-www-form-urlencoded"},body});
     return res.ok?"sent":`failed_${res.status}`;
   }catch{return "failed"}
@@ -158,7 +158,7 @@ app.delete("/api/watchlists/:id",async(q,r)=>{await db.removeWatchlist(q.params.
 app.get("/api/history",async(q,r)=>r.json(await db.history(q.query.origin||"",String(q.query.destinationCode||"").toUpperCase(),q.query.limit)));
 app.get("/api/alerts",async(q,r)=>r.json(await db.getAlerts(q.query.limit||100,q.session.user)));
 app.post("/api/alerts/test",async(q,r)=>{try{
- const profile=await db.getUserProfile(q.session.user),fake={departureAirport:"MCO",arrivalAirport:"TEST",destination:"FlightWatch Test",price:99,startDate:null,endDate:null,stops:0,flightLink:null},alert={score:"TEST",reason:"Your FlightWatch notification settings are working."};
+ const profile=await db.getUserProfile(q.session.user),fake={departureAirport:"MCO",arrivalAirport:"TEST",destination:"Anywhere With You Test",price:99,startDate:null,endDate:null,stops:0,flightLink:null},alert={score:"TEST",reason:"Your Anywhere With You notification settings are working."};
  const [emailStatus,smsStatus]=await Promise.all([sendEmail(profile,fake,alert),sendSms(profile,fake,alert)]);r.json({emailStatus,smsStatus});
 }catch(e){r.status(500).json({error:e.message})}});
 app.post("/api/monitor/run",async(q,r)=>{try{const x=await monitoringRun({deliver:false});await db.audit("manual_monitor_run",JSON.stringify({deals:x.deals,newAlerts:x.newAlerts}),q.session.user.email);r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
@@ -167,6 +167,27 @@ app.get("/api/groups",async(q,r)=>r.json({groups:await db.getGroups(q.session.us
 app.post("/api/groups",async(q,r)=>{try{const g=await db.createGroup(q.body?.name,q.session.user);await db.audit("group_created",g.name,q.session.user.email);r.json(g)}catch(e){r.status(400).json({error:e.message})}});
 app.post("/api/groups/:id/invite",async(q,r)=>{try{const x=await db.inviteToGroup(q.params.id,q.body?.email,q.session.user);await db.audit("group_invite_sent",q.body?.email,q.session.user.email);r.json({ok:true,inviteId:x.id})}catch(e){r.status(400).json({error:e.message})}});
 app.post("/api/groups/accept",async(q,r)=>{try{r.json(await db.acceptGroupInvite(q.body?.token,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
+
+
+app.get("/api/super/todos",async(q,r)=>{
+  if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});
+  r.json({todos:await db.getSuperTodos()});
+});
+app.post("/api/super/todos",async(q,r)=>{
+  if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});
+  try{r.json(await db.createSuperTodo(q.body?.title,q.body?.remarks,q.session.user))}
+  catch(e){r.status(400).json({error:e.message})}
+});
+app.patch("/api/super/todos/:id",async(q,r)=>{
+  if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});
+  try{r.json(await db.updateSuperTodo(q.params.id,q.body||{},q.session.user))}
+  catch(e){r.status(400).json({error:e.message})}
+});
+app.delete("/api/super/todos/:id",async(q,r)=>{
+  if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});
+  try{await db.deleteSuperTodo(q.params.id,q.session.user);r.json({ok:true})}
+  catch(e){r.status(400).json({error:e.message})}
+});
 
 app.get("/api/super/users",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});r.json({users:await db.listManagedUsers()})});
 app.patch("/api/super/users/:id/role",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});try{r.json(await db.setManagedUserRole(q.params.id,q.body?.role,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
@@ -202,5 +223,5 @@ app.use(express.static(path.join(__dirname,"public")));
 app.get("*",(q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
 db.init().then(async()=>{
  await db.bootstrapSuperAdmin(process.env.SUPER_ADMIN_EMAIL||process.env.ADMIN_EMAIL||"");
- app.listen(PORT,()=>console.log(`FlightWatch V6.0.1 running at http://localhost:${PORT}`));
+ app.listen(PORT,()=>console.log(`Anywhere With You V6.2 running at http://localhost:${PORT}`));
 }).catch(e=>{console.error(e);process.exit(1)});
