@@ -234,11 +234,14 @@ app.post("/api/admin/email/send",async(q,r)=>{try{
         subject,
         html:`<div style="font-family:Arial,sans-serif;max-width:640px;line-height:1.5"><h2>Anywhere With You</h2>${body.split("\\n").map(x=>`<p>${x.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]))}</p>`).join("")}<p style="color:#667085;font-size:12px">Just us. Somewhere else.</p></div>`
       })});
-      results.push({email:to,status:res.ok?"sent":`failed_${res.status}`});
+      let providerDetail="";
+      if(!res.ok){try{providerDetail=(await res.json())?.message||""}catch{}}
+      results.push({email:to,status:res.ok?"sent":`failed_${res.status}`,detail:providerDetail});
     }catch(e){results.push({email:to,status:"failed"})}
   }
   const sent=results.filter(x=>x.status==="sent").length;
   const failed=results.length-sent;
+  if(failed){try{await db.logError({service:"Email",code:"ADMIN_EMAIL_FAILED",message:`${failed} of ${results.length} admin emails failed`,details:JSON.stringify(results.filter(x=>x.status!=="sent"))})}catch{}}
   await db.logAdminEmail(q.session.user.email,scope,recipients.length,subject,body,{sent,failed});
   await db.audit("admin_email_sent",`${subject} · ${sent} sent · ${failed} failed`,q.session.user.email);
   r.json({ok:true,sent,failed,total:results.length,results});
@@ -261,5 +264,5 @@ app.use(express.static(path.join(__dirname,"public")));
 app.get("*",(q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
 db.init().then(async()=>{
  await db.bootstrapSuperAdmin(process.env.SUPER_ADMIN_EMAIL||process.env.ADMIN_EMAIL||"");
- app.listen(PORT,()=>console.log(`Anywhere With You V6.2 running at http://localhost:${PORT}`));
+ app.listen(PORT,()=>console.log(`Anywhere With You V6.4 running at http://localhost:${PORT}`));
 }).catch(e=>{console.error(e);process.exit(1)});

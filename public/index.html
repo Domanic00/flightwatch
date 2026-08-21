@@ -230,6 +230,74 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 .recipientCheck{display:flex;gap:8px;align-items:center;padding:5px 3px}
 @media(max-width:760px){.adminMailGrid{grid-template-columns:1fr}}
 
+
+/* V6.4 Beta Candidate — consistent application controls */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea{
+  box-sizing:border-box;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--surface2);
+  color:var(--text);
+  font:inherit;
+}
+input:not([type="checkbox"]):not([type="radio"]){
+  min-height:40px;
+  padding:0 11px;
+}
+select{
+  min-height:40px;
+  padding:0 34px 0 11px;
+}
+textarea{padding:10px 11px}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input:focus,select:focus,textarea:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 15%,transparent);
+}
+
+/* Discover always uses four columns on desktop */
+#discover .search{
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+}
+#discover .search .filterWide{
+  min-width:0;
+}
+#discover .search #find{
+  grid-column:1/-1;
+  justify-self:center;
+  width:min(340px,100%);
+}
+#discover .search #filterExpand{
+  grid-column:1/-1;
+  justify-self:end;
+}
+@media(max-width:980px){
+  #discover .search{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@media(max-width:620px){
+  #discover .search{grid-template-columns:1fr !important}
+}
+
+/* Ticket summary */
+.reportCounts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.reportCountPill{border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--muted);font-size:12px}
+
+/* Audit paging */
+.auditPager{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px}
+.auditPager span{color:var(--muted);font-size:12px}
+
+/* First-time login guidance */
+.firstTimeHint{display:block;color:var(--muted);font-size:12px;margin-top:8px;text-align:center}
+
+/* Destructive action consistency */
+.btn.danger{border-color:color-mix(in srgb,#ef4444 45%,var(--line));color:#ff7373}
+
+/* Email diagnostics */
+.mailDiag{margin-top:8px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);font-size:12px;white-space:pre-wrap}
+
 </style></head><body>
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
@@ -238,7 +306,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="admin or invited email"></div>
 <div class="field" style="margin-top:10px"><label>Password</label><input id="loginPassword" type="password" placeholder="Password"></div>
 <button id="loginBtn" class="btn primary" style="width:100%;margin-top:14px">Sign in</button>
-<button id="setupBtn" class="btn" style="width:100%;margin-top:8px">First-time account setup</button>
+<button id="setupBtn" class="btn" style="width:100%;margin-top:8px">First-time account setup</button><small class="firstTimeHint">Invited for the first time? Create your password here.</small>
 <p id="loginError" class="tiny" style="color:var(--red);margin-bottom:0"></p>
 </div></div>
 <div class="shell"><aside class="sidebar"><div class="logo"><span>✈</span>Anywhere With You</div><nav class="nav">
@@ -246,7 +314,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <main class="main"><header class="top"><strong id="pageTitle">Discover</strong><div class="topRight"><span class="dot"></span><span id="apiStatus" class="tiny muted">Checking…</span><button id="theme" class="btn">◐ System</button></div></header><div class="content">
 
 <section id="discover" class="page active"><div class="hero"><div><div class="eyebrow">LIVE U.S. DEAL DISCOVERY</div><h1>Just us. Somewhere else.</h1><p>Explore low-cost round trips from Orlando and Miami, then save the routes worth watching.</p></div><button id="refresh" class="btn">↻ Refresh live deals</button></div>
-<div class="panel search"><div class="field"><label>Departure</label><select id="origin"><option value="BOTH">MCO + MIA</option><option value="MCO">MCO only</option><option value="MIA">MIA only</option></select></div><div class="field"><label>Travelers</label><select id="travelers"><option value="1">1 adult</option><option value="2" selected>2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option></select></div><div class="field"><label>Trip type</label><select disabled><option>Round trip · Economy</option></select></div><div class="filterWide advancedFilter"><label>Cabin</label><select id="travelClass"><option value="1">Economy</option><option value="2">Premium economy</option><option value="3">Business</option><option value="4">First</option></select></div>
+<div class="panel search"><div class="field"><label>Departure</label><select id="origin"><option value="BOTH">MCO + MIA</option><option value="MCO">MCO only</option><option value="MIA">MIA only</option></select></div><div class="field"><label>Travelers</label><select id="travelers"><option value="1">1 adult</option><option value="2" selected>2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option></select></div><div class="field"><label>Trip type</label><select disabled><option>Round trip · Economy</option></select></div><div class="filterWide"><label>Cabin</label><select id="travelClass"><option value="1">Economy</option><option value="2">Premium economy</option><option value="3">Business</option><option value="4">First</option></select></div>
 <div class="filterWide advancedFilter"><label>Depart</label><input id="outboundDate" type="date"></div>
 <div class="filterWide advancedFilter"><label>Return</label><input id="returnDate" type="date"></div>
 <div class="filterWide advancedFilter"><label>Stops</label><select id="stopsFilter"><option value="">Any stops</option><option value="1">Nonstop</option><option value="2">≤ 1 stop</option><option value="3">≤ 2 stops</option></select></div>
@@ -281,7 +349,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <div class="cards3" id="adminHealth"></div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Error Center</h2><p>Errors remain here until acknowledged or resolved.</p></div></div><div id="errorRows"></div>
 <div class="sectionHead" style="margin-top:18px"><div><h3>User-submitted reports</h3><p>Tickets submitted from the in-app Report an issue control.</p></div></div>
-<div class="ticketWorkspace">
+<div id="reportCounts" class="reportCounts"></div><div class="ticketWorkspace">
       <div id="userReportList" class="ticketList"></div>
       <div id="userReportDetail" class="ticketDetail"><div class="message">Select a report to review.</div></div>
     </div>
@@ -297,7 +365,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 
 </div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Beta testers</h2><p>Lightweight allowlist for personal testing. Core MCO/MIA behavior stays global.</p></div></div><div class="formGrid"><div class="field"><label>Email</label><input id="betaEmail" type="email" placeholder="tester@example.com"></div><div class="field"><label>Role</label><select id="betaRole"><option value="tester">Tester</option><option value="admin">Admin</option></select></div></div><button id="addBeta" class="btn primary" style="margin-top:12px">Add tester</button><div id="betaRows" style="margin-top:10px"></div></div>
-<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Audit log</h2><p>Important administrative actions.</p></div></div><div class="auditToolbar"><input id="auditSearch" placeholder="Search audit log by keyword"><select id="auditLimit"><option value="10">10 shown</option><option value="25" selected>25 shown</option><option value="50">50 shown</option><option value="100">100 shown</option></select></div><div id="auditRows"></div></div>
+<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Audit log</h2><p>Important administrative actions.</p></div></div><div class="auditToolbar"><input id="auditSearch" placeholder="Search audit log by keyword"><select id="auditLimit"><option value="10" selected>10 per page</option><option value="25">25 per page</option><option value="50">50 per page</option></select></div><div id="auditRows"></div><div class="auditPager"><button id="auditPrev" class="btn">Previous</button><span id="auditPageInfo">Page 1</span><button id="auditNext" class="btn">Next</button></div></div>
 <div class="panel" style="margin-top:14px">
   <div class="sectionHead"><div><h2>Send email</h2><p>Send a custom message from Anywhere With You to selected or active users.</p></div></div>
   <div class="adminMailGrid">
@@ -316,7 +384,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
       <label class="tiny muted" style="display:block;margin-top:8px">Message</label>
       <textarea id="mailBody" placeholder="Write your message..."></textarea>
       <button id="sendAdminMail" class="btn primary" style="margin-top:10px">Send email</button>
-      <small id="mailResult" style="display:block;margin-top:7px"></small>
+      <small id="mailResult" style="display:block;margin-top:7px"></small><div id="mailDiag" class="mailDiag" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -411,6 +479,7 @@ async function loadUserReports(){
   const x=await api("/api/admin/reports?limit=200");
   userReportCache=x.reports||[];
   const active=userReportCache.filter(t=>t.status!=="resolved"),resolved=userReportCache.filter(t=>t.status==="resolved");
+  if($("reportCounts"))$("reportCounts").innerHTML=`<span class="reportCountPill">Open ${active.length}</span><span class="reportCountPill">Resolved ${resolved.length}</span>`;
   const subjectButton=t=>`<button class="ticketSubject ${String(t.id)===String(selectedReportId)?"active":""}" onclick="selectUserReport('${t.id}')"><span>#${t.id} · ${t.title}</span><small>${t.status}</small></button>`;
   $("userReportList").innerHTML=(active.length?active.map(subjectButton).join(""):'<div class="message">No open reports.</div>')+
     (resolved.length?`<details class="ticketFolder"><summary>Resolved (${resolved.length})</summary><div class="ticketFolderBody">${resolved.map(subjectButton).join("")}</div></details>`:"");
@@ -443,18 +512,26 @@ window.saveTodo=async(id,status)=>{try{
   await api(`/api/super/todos/${id}`,{method:"PATCH",body:JSON.stringify({status,remarks:$("todoRemarks-"+id)?.value||""})});
   toast("To-do updated");await loadSuperTodos();
 }catch(e){toast(e.message)}};
-window.deleteTodo=async id=>{try{
+window.deleteTodo=async id=>{if(!confirm("Delete this to-do item?"))return;try{
   await api(`/api/super/todos/${id}`,{method:"DELETE"});toast("To-do deleted");await loadSuperTodos();
 }catch(e){toast(e.message)}};
 
 
+let auditPage=1;
 function renderAudit(){
-  const q=($("auditSearch")?.value||"").trim().toLowerCase(),limit=Number($("auditLimit")?.value||25);
-  const rows=(window.auditCache||[]).filter(a=>!q||(`${a.action} ${a.details||""} ${a.actor||""}`).toLowerCase().includes(q)).slice(0,limit);
+  const q=($("auditSearch")?.value||"").trim().toLowerCase(),limit=Number($("auditLimit")?.value||10);
+  const filtered=(window.auditCache||[]).filter(a=>!q||(`${a.action} ${a.details||""} ${a.actor||""}`).toLowerCase().includes(q));
+  const pages=Math.max(1,Math.ceil(filtered.length/limit));auditPage=Math.min(Math.max(1,auditPage),pages);
+  const rows=filtered.slice((auditPage-1)*limit,auditPage*limit);
   $("auditRows").innerHTML=rows.length?rows.map(a=>`<div class="listRow"><div><strong>${a.action}</strong><small>${a.details||""} · ${new Date(a.createdAt).toLocaleString()}</small></div></div>`).join(""):'<div class="message">No matching audit events.</div>';
+  if($("auditPageInfo"))$("auditPageInfo").textContent=`Page ${auditPage} of ${pages} · ${filtered.length} events`;
+  if($("auditPrev"))$("auditPrev").disabled=auditPage<=1;
+  if($("auditNext"))$("auditNext").disabled=auditPage>=pages;
 }
-if($("auditSearch"))$("auditSearch").oninput=renderAudit;
-if($("auditLimit"))$("auditLimit").onchange=renderAudit;
+if($("auditSearch"))$("auditSearch").oninput=()=>{auditPage=1;renderAudit()};
+if($("auditLimit"))$("auditLimit").onchange=()=>{auditPage=1;renderAudit()};
+if($("auditPrev"))$("auditPrev").onclick=()=>{auditPage=Math.max(1,auditPage-1);renderAudit()};
+if($("auditNext"))$("auditNext").onclick=()=>{auditPage++;renderAudit()};
 
 
 async function loadMailRecipients(){
@@ -473,8 +550,9 @@ if($("sendAdminMail"))$("sendAdminMail").onclick=async()=>{
   try{
     const x=await api("/api/admin/email/send",{method:"POST",body:JSON.stringify({scope,selectedEmails,subject:$("mailSubject").value,body:$("mailBody").value})});
     $("mailResult").textContent=`Sent ${x.sent} of ${x.total}${x.failed?` · ${x.failed} failed`:""}`;
+    if($("mailDiag")){$("mailDiag").style.display=x.failed?"block":"none";$("mailDiag").textContent=x.failed?x.results.filter(r=>r.status!=="sent").map(r=>`${r.email}: ${r.status}`).join("\n"):"";}
     toast("Email send complete");
-  }catch(e){$("mailResult").textContent=e.message}
+  }catch(e){$("mailResult").textContent=e.message;if($("mailDiag")){$("mailDiag").style.display="block";$("mailDiag").textContent=e.message}}
 };
 
 async function loadAdmin(){

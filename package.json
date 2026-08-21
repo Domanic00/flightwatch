@@ -1,6 +1,6 @@
 {
   "name": "anywhere-with-you",
-  "version": "6.3.0",
+  "version": "6.4.0",
   "private": true,
   "main": "server.js",
   "scripts": {
@@ -17,5 +17,5 @@
     "pg": "^8.13.3",
     "bcryptjs": "^2.4.3"
   },
-  "description": "Anywhere With You V6.3 - UI polish, ticket folders, searchable audit log, access styling, and admin email composer."
+  "description": "Anywhere With You V6.4 Beta Candidate"
 }

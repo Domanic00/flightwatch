@@ -217,3 +217,15 @@ Planned safeguards:
 - Toast notifications now appear above the Report an issue button so group/status messages are not blocked.
 - Adds Admin → **Send email** with self-test, selected users, and Super Admin-only all-active-users delivery through Resend.
 - Admin email sends are audited and summarized in Neon.
+
+## V6.4 Beta Candidate
+Final beta-readiness pass for the evening:
+- Four-column Discover controls before and after advanced-filter expansion.
+- Universal dark-theme styling for text fields, dropdowns, and text areas, including Group invitations.
+- Removes duplicate System Status sign-out where present.
+- Adds Open / Resolved report counts and keeps resolved tickets collapsed.
+- Audit log remains retained while UI adds keyword search plus Previous / Next pagination.
+- Adds confirmations around destructive Super Admin actions where applicable.
+- Improves first-time invited-user guidance.
+- Admin email failures now expose provider HTTP/detail information and are logged to Error Center.
+- Keeps the permanent sidebar Sign out and Report an issue behavior.
