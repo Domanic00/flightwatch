@@ -21,15 +21,16 @@ app.post("/api/auth/setup",async(q,r)=>{const email=String(q.body?.email||"").tr
 app.post("/api/auth/logout",(q,r)=>{q.session=null;r.json({ok:true})});
 app.use("/api",(q,r,n)=>{if(q.path.startsWith("/auth/")||q.path==="/health"||q.path.startsWith("/cron/"))return n();if(!q.session?.user)return r.status(401).json({error:"Authentication required."});if(q.path.startsWith("/admin/")&&!isAdmin(q))return r.status(403).json({error:"Admin only"});n()});
 
-async function explore(origin){
-  const p=new URLSearchParams({engine:"google_travel_explore",departure_id:origin,gl:"us",hl:"en",currency:"USD",type:"1",api_key:process.env.SERPAPI_KEY});
+async function explore(origin,adults=2){
+  const p=new URLSearchParams({engine:"google_travel_explore",departure_id:origin,gl:"us",hl:"en",currency:"USD",type:"1",adults:String(adults),api_key:process.env.SERPAPI_KEY});
   const res=await fetch("https://serpapi.com/search.json?"+p),d=await res.json();
   if(!res.ok||d.error)throw new Error(d.error||"SerpApi failed");
   return d
 }
 function norm(d,o,i){return{id:`${o}-${d.destination_airport?.code||d.arrival_airport?.code||d.destination_id||i}-${d.start_date||i}`,destination:d.name||"Unknown",country:d.country||"",price:Number(d.flight_price??d.price??0),flightLink:d.link||d.flight_link||null,startDate:d.start_date||null,endDate:d.end_date||null,departureAirport:o,arrivalAirport:d.destination_airport?.code||d.arrival_airport?.code||null,flightDuration:d.flight_duration?Number(d.flight_duration):null,stops:d.number_of_stops??d.stops??null,airline:d.airline||null,hotelPrice:d.hotel_price?Number(d.hotel_price):null}}
-async function getDeals(origins=["MCO","MIA"]){
-  const rs=await Promise.all(origins.map(explore));let deals=[];
+async function getDeals(origins=["MCO","MIA"],adults=2){
+  adults=Math.min(6,Math.max(1,Number(adults)||2));
+  const rs=await Promise.all(origins.map(o=>explore(o,adults)));let deals=[];
   rs.forEach((x,i)=>deals.push(...(x.destinations||x.flights||[]).map((d,j)=>norm(d,origins[i],j))));
   deals=deals.filter(d=>(d.country||"").trim().toLowerCase()==="united states"&&d.price>0);
   const u=new Map();
@@ -121,7 +122,7 @@ async function monitoringRun({deliver=true}={}){
 }
 
 app.get("/api/health",(q,r)=>r.json({ok:true,apiConfigured:!!process.env.SERPAPI_KEY,database:db.usePostgres?"postgres":"local",v:"4.0.0"}));
-app.get("/api/deals",async(q,r)=>{try{if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:["MCO","MIA"].includes(req)?[req]:["MCO","MIA"];const deals=await getDeals(origins);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"})}catch(e){r.status(500).json({error:e.message})}});
+app.get("/api/deals",async(q,r)=>{try{if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:["MCO","MIA"].includes(req)?[req]:["MCO","MIA"];const adults=Math.min(6,Math.max(1,Number(q.query.adults)||2));const deals=await getDeals(origins,adults);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"})}catch(e){r.status(500).json({error:e.message})}});
 app.get("/api/profile",async(q,r)=>r.json(await db.getProfile()));app.put("/api/profile",async(q,r)=>r.json(await db.saveProfile(q.body||{})));
 app.get("/api/tracked",async(q,r)=>r.json(await db.getTracked()));app.post("/api/tracked",async(q,r)=>r.json(await db.addTracked(q.body||{})));app.delete("/api/tracked/:id",async(q,r)=>{await db.removeTracked(q.params.id);r.json({ok:true})});
 app.get("/api/watchlists",async(q,r)=>r.json(await db.getWatchlists()));app.post("/api/watchlists",async(q,r)=>r.json(await db.addWatchlist(q.body||{})));app.delete("/api/watchlists/:id",async(q,r)=>{await db.removeWatchlist(q.params.id);r.json({ok:true})});

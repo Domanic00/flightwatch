@@ -127,3 +127,10 @@ Admin adds tester emails under Admin → Beta testers. A tester enters that emai
 - Restores the visible tester email field.
 - Keeps admin login using email `admin` (or blank) + `APP_PASSWORD`.
 - Keeps first-time tester setup using invited email + password.
+
+## V5.2 usability fixes
+- Persistent Sign out button pinned to the lower-left sidebar.
+- Logout now calls `/api/auth/logout` consistently.
+- Manual Discover searches can select 1–6 adult travelers; default remains 2.
+- Flight deal results are paginated at 10 per page instead of one long infinite list.
+- New searches and sorting reset to page 1.
