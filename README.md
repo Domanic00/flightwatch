@@ -118,3 +118,7 @@ FlightWatch uses the fare values returned by Google Travel Explore. Always verif
 - Twilio/Resend failures logged with provider response details
 
 Note: beta users are an administrative allowlist in V5.0; the existing private app password remains the authentication gate. Per-user passwords/invitation links are intentionally deferred so the personal-use architecture stays simple.
+
+
+## V5.1 Tester Login
+Admin adds tester emails under Admin → Beta testers. A tester enters that email, chooses a password of at least 10 characters, and clicks **First-time tester setup** once. Passwords are bcrypt-hashed in Neon. Subsequent sign-ins use email + password. Admin still signs in using email `admin` and the existing `APP_PASSWORD`. Admin APIs are server-side role protected. Core search behavior remains MCO/MIA, 2 travelers, U.S. destinations.

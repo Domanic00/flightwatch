@@ -1,4 +1,4 @@
-const express=require("express"),path=require("path"),crypto=require("crypto"),cookieSession=require("cookie-session");require("dotenv").config();const db=require("./lib/storage");
+const express=require("express"),path=require("path"),crypto=require("crypto"),cookieSession=require("cookie-session"),bcrypt=require("bcryptjs");require("dotenv").config();const db=require("./lib/storage");
 const app=express(),PORT=process.env.PORT||3000;
 
 app.set("trust proxy", 1);
@@ -14,11 +14,12 @@ app.use(cookieSession({
     secure:process.env.NODE_ENV==="production"
 }));
 const protectedMode=Boolean(process.env.APP_PASSWORD);
-
-app.get("/api/auth/status",(q,r)=>r.json({protected:protectedMode,authenticated:!protectedMode||!!q.session?.authenticated}));
-app.post("/api/auth/login",(q,r)=>{if(!protectedMode){q.session.authenticated=true;return r.json({ok:true})}const a=Buffer.from(String(q.body?.password||"")),b=Buffer.from(String(process.env.APP_PASSWORD));if(a.length!==b.length||!crypto.timingSafeEqual(a,b))return r.status(401).json({error:"Incorrect password."});q.session.authenticated=true;r.json({ok:true})});
+function isAdmin(q){return q.session?.user?.role==="admin"}
+app.get("/api/auth/status",(q,r)=>r.json({protected:protectedMode,authenticated:!!q.session?.user,user:q.session?.user||null}));
+app.post("/api/auth/login",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");if(process.env.APP_PASSWORD&&password===process.env.APP_PASSWORD&&(!email||email==="admin")){q.session.user={id:"admin",email:"admin",role:"admin"};await db.audit("login","Admin signed in","admin");return r.json({ok:true,user:q.session.user})}const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled)return r.status(401).json({error:"Invalid email or password"});if(!u.passwordHash)return r.status(409).json({error:"First-time setup required",setupRequired:true});if(!(await bcrypt.compare(password,u.passwordHash)))return r.status(401).json({error:"Invalid email or password"});q.session.user={id:u.id,email:u.email,role:u.role||"tester"};await db.markBetaLogin(u.id);await db.audit("login",`${u.email} signed in`,u.email);r.json({ok:true,user:q.session.user})});
+app.post("/api/auth/setup",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled)return r.status(403).json({error:"This email has not been invited"});if(u.passwordHash)return r.status(409).json({error:"Account already configured"});if(password.length<10)return r.status(400).json({error:"Password must be at least 10 characters"});await db.setBetaPassword(u.id,await bcrypt.hash(password,12));q.session.user={id:u.id,email:u.email,role:u.role||"tester"};await db.markBetaLogin(u.id);await db.audit("tester_account_setup",`${email} created a password`,email);r.json({ok:true,user:q.session.user})});
 app.post("/api/auth/logout",(q,r)=>{q.session=null;r.json({ok:true})});
-app.use("/api",(q,r,n)=>{if(q.path.startsWith("/auth/")||q.path==="/health"||q.path.startsWith("/cron/")||!protectedMode||q.session?.authenticated)return n();r.status(401).json({error:"Authentication required."})});
+app.use("/api",(q,r,n)=>{if(q.path.startsWith("/auth/")||q.path==="/health"||q.path.startsWith("/cron/"))return n();if(!q.session?.user)return r.status(401).json({error:"Authentication required."});if(q.path.startsWith("/admin/")&&!isAdmin(q))return r.status(403).json({error:"Admin only"});n()});
 
 async function explore(origin){
   const p=new URLSearchParams({engine:"google_travel_explore",departure_id:origin,gl:"us",hl:"en",currency:"USD",type:"1",api_key:process.env.SERPAPI_KEY});
