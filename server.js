@@ -1,8 +1,18 @@
 const express=require("express"),path=require("path"),crypto=require("crypto"),cookieSession=require("cookie-session");require("dotenv").config();const db=require("./lib/storage");
 const app=express(),PORT=process.env.PORT||3000;
-app.set("trust proxy",1);
+
+app.set("trust proxy", 1);
+
 app.use(express.json());
-app.use(cookieSession({name:"fw",keys:[process.env.SESSION_SECRET||"local-dev-secret"],maxAge:2592000000,httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production"}));
+
+app.use(cookieSession({
+    name:"fw",
+    keys:[process.env.SESSION_SECRET||"local-dev-secret"],
+    maxAge:2592000000,
+    httpOnly:true,
+    sameSite:"lax",
+    secure:process.env.NODE_ENV==="production"
+}));
 const protectedMode=Boolean(process.env.APP_PASSWORD);
 
 app.get("/api/auth/status",(q,r)=>r.json({protected:protectedMode,authenticated:!protectedMode||!!q.session?.authenticated}));
