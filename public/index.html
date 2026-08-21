@@ -115,12 +115,6 @@ async function doLogout(){
   try{await api("/api/auth/logout",{method:"POST"});}catch(e){}
   location.reload();
 }
-if($("sidebarLogout"))if($("logout"))
-
-async function doLogout(){
-  try{await api("/api/auth/logout",{method:"POST"});}catch(e){}
-  location.reload();
-}
 if($("sidebarLogout"))$("sidebarLogout").onclick=doLogout;
 if($("logout"))$("logout").onclick=doLogout;
 

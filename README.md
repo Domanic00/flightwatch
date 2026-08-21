@@ -134,3 +134,6 @@ Admin adds tester emails under Admin → Beta testers. A tester enters that emai
 - Manual Discover searches can select 1–6 adult travelers; default remains 2.
 - Flight deal results are paginated at 10 per page instead of one long infinite list.
 - New searches and sorting reset to page 1.
+
+## V5.2.1 hotfix
+Fixes a duplicated malformed logout JavaScript block introduced in V5.2 that prevented the page script from parsing. Sign in, tester setup, logout, pagination, and other button handlers can now initialize normally.

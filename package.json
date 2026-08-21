@@ -1,6 +1,6 @@
 {
   "name": "flightwatch-v5",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "private": true,
   "main": "server.js",
   "scripts": {
@@ -17,5 +17,5 @@
     "pg": "^8.13.3",
     "bcryptjs": "^2.4.3"
   },
-  "description": "FlightWatch V5.2 - persistent sign out, traveler selector, 10-item pagination, login/logout fixes."
+  "description": "FlightWatch V5.2.1 - fixes JavaScript regression blocking sign in."
 }
