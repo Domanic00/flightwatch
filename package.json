@@ -1,6 +1,6 @@
 {
   "name": "anywhere-with-you",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "private": true,
   "main": "server.js",
   "scripts": {
@@ -17,5 +17,5 @@
     "pg": "^8.13.3",
     "bcryptjs": "^2.4.3"
   },
-  "description": "Anywhere With You - personal flight deal tracker."
+  "description": "Anywhere With You V6.3 - UI polish, ticket folders, searchable audit log, access styling, and admin email composer."
 }

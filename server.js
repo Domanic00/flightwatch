@@ -206,6 +206,44 @@ app.patch("/api/admin/reports/:id",async(q,r)=>{try{
   r.json(await db.updateUserReport(q.params.id,q.body||{},q.session.user));
 }catch(e){r.status(400).json({error:e.message})}});
 
+
+app.get("/api/admin/email/recipients",async(q,r)=>{
+  const users=await db.listManagedUsers();
+  r.json({users:(users||[]).filter(x=>x.enabled!==false && (x.status||"active")==="active").map(x=>({email:x.email,role:x.role}))});
+});
+app.post("/api/admin/email/send",async(q,r)=>{try{
+  if(!process.env.RESEND_API_KEY)return r.status(400).json({error:"Email provider is not configured"});
+  const subject=String(q.body?.subject||"").trim(),body=String(q.body?.body||"").trim(),scope=String(q.body?.scope||"selected");
+  if(subject.length<2)return r.status(400).json({error:"Subject is required"});
+  if(body.length<2)return r.status(400).json({error:"Email body is required"});
+  let recipients=[];
+  if(scope==="self"){
+    recipients=[q.session.user.email];
+  }else{
+    recipients=await db.listActiveRecipientEmails(scope,q.body?.selectedEmails||[]);
+  }
+  recipients=[...new Set(recipients.filter(Boolean))];
+  if(!recipients.length)return r.status(400).json({error:"No active recipients selected"});
+  if(scope==="all" && !isSuperAdmin(q))return r.status(403).json({error:"Only a Super Admin can email all users"});
+  const results=[];
+  for(const to of recipients){
+    try{
+      const res=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({
+        from:process.env.RESEND_FROM||"Anywhere With You <onboarding@resend.dev>",
+        to:[to],
+        subject,
+        html:`<div style="font-family:Arial,sans-serif;max-width:640px;line-height:1.5"><h2>Anywhere With You</h2>${body.split("\\n").map(x=>`<p>${x.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]))}</p>`).join("")}<p style="color:#667085;font-size:12px">Just us. Somewhere else.</p></div>`
+      })});
+      results.push({email:to,status:res.ok?"sent":`failed_${res.status}`});
+    }catch(e){results.push({email:to,status:"failed"})}
+  }
+  const sent=results.filter(x=>x.status==="sent").length;
+  const failed=results.length-sent;
+  await db.logAdminEmail(q.session.user.email,scope,recipients.length,subject,body,{sent,failed});
+  await db.audit("admin_email_sent",`${subject} · ${sent} sent · ${failed} failed`,q.session.user.email);
+  r.json({ok:true,sent,failed,total:results.length,results});
+}catch(e){r.status(400).json({error:e.message})}});
+
 app.get("/api/admin/errors",async(q,r)=>r.json(await db.getErrors(q.query.limit||100)));
 app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`,q.session.user.email);r.json({ok:true})});
 app.get("/api/admin/audit",async(q,r)=>r.json(await db.getAudit(q.query.limit||100)));

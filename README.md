@@ -206,3 +206,14 @@ Planned safeguards:
 - Bottom-right disclosure control expands/collapses the remaining filters.
 - User-submitted reports now use a clean subject-only ticket list with a selectable detail pane.
 - Adds a Super Admin-only to-do list under Error Center with title, remarks, open/done status, and delete controls.
+
+## V6.3
+- Discover headline is now **Just us. Somewhere else.** in the main white bold hero position.
+- Find Deals is centered within the filter panel.
+- Removes Airline search to keep the expanded filter grid visually balanced.
+- User reports place resolved tickets inside a collapsible **Resolved** folder.
+- Audit Log retains full history but displays a configurable 10/25/50/100 rows at once with keyword search.
+- Access Management role selector uses the same dark UI styling as the rest of the application.
+- Toast notifications now appear above the Report an issue button so group/status messages are not blocked.
+- Adds Admin → **Send email** with self-test, selected users, and Super Admin-only all-active-users delivery through Resend.
+- Admin email sends are audited and summarized in Neon.

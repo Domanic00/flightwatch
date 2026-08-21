@@ -167,6 +167,69 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
   .todoComposer{grid-template-columns:1fr}
 }
 
+
+/* V6.3 discover layout polish */
+.search #find{
+  grid-column:1/-1;
+  justify-self:center;
+  width:min(340px,100%);
+  margin-top:4px;
+}
+.search #filterExpand{
+  grid-column:1/-1;
+  justify-self:end;
+}
+#discover .hero h1{
+  color:#fff;
+  font-weight:900;
+}
+
+/* Resolve report button / toast overlap */
+.reportWidget{bottom:22px}
+#toast{
+  right:22px !important;
+  bottom:82px !important;
+  z-index:1100 !important;
+}
+
+/* Styled role controls */
+.accessRoleSelect{
+  height:40px;
+  min-width:130px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--surface2);
+  color:var(--text);
+  padding:0 11px;
+  font-weight:750;
+}
+.accessRoleSelect:focus{outline:none;border-color:var(--accent)}
+
+/* Resolved report folder */
+.ticketFolder{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ticketFolder summary{cursor:pointer;padding:11px 13px;background:var(--surface2);font-weight:850;color:var(--text)}
+.ticketFolderBody{padding:0}
+
+/* Audit controls */
+.auditToolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.auditToolbar input{
+  flex:1;min-width:220px;height:38px;border:1px solid var(--line);border-radius:8px;
+  background:var(--surface2);color:var(--text);padding:0 10px
+}
+.auditToolbar select{
+  height:38px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--text);padding:0 9px
+}
+
+/* Admin mail composer */
+.adminMailGrid{display:grid;grid-template-columns:220px 1fr;gap:12px}
+.adminMailGrid select,.adminMailGrid input,.adminMailGrid textarea{
+  width:100%;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--text);padding:9px 11px
+}
+.adminMailGrid textarea{min-height:180px;resize:vertical}
+.recipientPicker{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:8px;background:var(--surface2)}
+.recipientCheck{display:flex;gap:8px;align-items:center;padding:5px 3px}
+@media(max-width:760px){.adminMailGrid{grid-template-columns:1fr}}
+
 </style></head><body>
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
@@ -182,13 +245,13 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <button data-page="discover" class="active">Discover</button><button data-page="tracked">Tracked flights</button><button data-page="history">Price history</button><button data-page="watchlists">Watchlists</button><button data-page="alerts">Alerts</button><button data-page="profile">Profile</button><button data-page="groups">Groups</button><button data-page="system" data-admin-only="true">System status</button><button data-page="admin" data-admin-only="true">Admin</button></nav><div id="accountBadge" class="accountBadge"><strong id="accountEmail">—</strong><span id="accountRole">—</span></div><button id="sidebarLogout" class="sidebarLogout">↪ Sign out</button><div class="sideFoot">MCO + MIA<br>Just us. Somewhere else.</div></aside>
 <main class="main"><header class="top"><strong id="pageTitle">Discover</strong><div class="topRight"><span class="dot"></span><span id="apiStatus" class="tiny muted">Checking…</span><button id="theme" class="btn">◐ System</button></div></header><div class="content">
 
-<section id="discover" class="page active"><div class="hero"><div><div class="eyebrow">LIVE U.S. DEAL DISCOVERY</div><h1>Cheap trips, without the searching.</h1><p>Just us. Somewhere else.</p></div><button id="refresh" class="btn">↻ Refresh live deals</button></div>
+<section id="discover" class="page active"><div class="hero"><div><div class="eyebrow">LIVE U.S. DEAL DISCOVERY</div><h1>Just us. Somewhere else.</h1><p>Explore low-cost round trips from Orlando and Miami, then save the routes worth watching.</p></div><button id="refresh" class="btn">↻ Refresh live deals</button></div>
 <div class="panel search"><div class="field"><label>Departure</label><select id="origin"><option value="BOTH">MCO + MIA</option><option value="MCO">MCO only</option><option value="MIA">MIA only</option></select></div><div class="field"><label>Travelers</label><select id="travelers"><option value="1">1 adult</option><option value="2" selected>2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option></select></div><div class="field"><label>Trip type</label><select disabled><option>Round trip · Economy</option></select></div><div class="filterWide advancedFilter"><label>Cabin</label><select id="travelClass"><option value="1">Economy</option><option value="2">Premium economy</option><option value="3">Business</option><option value="4">First</option></select></div>
 <div class="filterWide advancedFilter"><label>Depart</label><input id="outboundDate" type="date"></div>
 <div class="filterWide advancedFilter"><label>Return</label><input id="returnDate" type="date"></div>
 <div class="filterWide advancedFilter"><label>Stops</label><select id="stopsFilter"><option value="">Any stops</option><option value="1">Nonstop</option><option value="2">≤ 1 stop</option><option value="3">≤ 2 stops</option></select></div>
 <div class="filterWide advancedFilter"><label>Destination / airport</label><input id="destinationSearch" placeholder="Search city or airport"></div>
-<div class="filterWide advancedFilter"><label>Airline</label><input id="airlineSearch" placeholder="Search airline or IATA code"></div>
+
 <button id="filterExpand" class="filterExpand" type="button" aria-expanded="false">More filters <span id="filterArrow">⌄</span></button><button id="find" class="btn primary">Find deals</button></div>
 <div class="stats"><div class="stat"><label>Best fare</label><strong id="best">$—</strong><small class="muted">current search</small></div><div class="stat"><label>U.S. deals</label><strong id="dealCount">—</strong><small class="muted">current search</small></div><div class="stat"><label>Nonstop</label><strong id="nonstop">—</strong><small class="muted">available results</small></div><div class="stat"><label>Tracked</label><strong id="trackedCount">—</strong><small class="muted">persistent routes</small></div></div>
 <div class="sectionHead"><div><h2>Best U.S. deals</h2><p id="lastChecked">Waiting for live data.</p></div><select id="sort" class="btn"><option value="price">Lowest price</option><option value="destination">Destination A–Z</option><option value="duration">Shortest flight</option></select></div><div id="deals" class="grid"><div class="message">Loading live deals…</div></div><div id="dealPagination" class="pagination"></div></section>
@@ -234,7 +297,30 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 
 </div>
 <div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Beta testers</h2><p>Lightweight allowlist for personal testing. Core MCO/MIA behavior stays global.</p></div></div><div class="formGrid"><div class="field"><label>Email</label><input id="betaEmail" type="email" placeholder="tester@example.com"></div><div class="field"><label>Role</label><select id="betaRole"><option value="tester">Tester</option><option value="admin">Admin</option></select></div></div><button id="addBeta" class="btn primary" style="margin-top:12px">Add tester</button><div id="betaRows" style="margin-top:10px"></div></div>
-<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Audit log</h2><p>Important administrative actions.</p></div></div><div id="auditRows"></div></div><div id="superAdminPanel" class="panel" style="margin-top:14px;display:none"><div class="sectionHead"><div><h2>Access management</h2><p>Super Admin only · roles, suspension/revocation, and security activity.</p></div><button id="refreshAccess" class="btn">Refresh</button></div><div id="managedUsers"></div><div class="sectionHead" style="margin-top:18px"><div><h3>Security events</h3><p>Recent privileged account changes.</p></div></div><div id="securityEvents"></div></div></section>
+<div class="panel" style="margin-top:14px"><div class="sectionHead"><div><h2>Audit log</h2><p>Important administrative actions.</p></div></div><div class="auditToolbar"><input id="auditSearch" placeholder="Search audit log by keyword"><select id="auditLimit"><option value="10">10 shown</option><option value="25" selected>25 shown</option><option value="50">50 shown</option><option value="100">100 shown</option></select></div><div id="auditRows"></div></div>
+<div class="panel" style="margin-top:14px">
+  <div class="sectionHead"><div><h2>Send email</h2><p>Send a custom message from Anywhere With You to selected or active users.</p></div></div>
+  <div class="adminMailGrid">
+    <div>
+      <label class="tiny muted">Recipients</label>
+      <select id="mailScope">
+        <option value="self">Test: send to myself</option>
+        <option value="selected">Selected users</option>
+        <option value="all">All active users (Super Admin only)</option>
+      </select>
+      <div id="recipientPicker" class="recipientPicker" style="margin-top:8px"></div>
+    </div>
+    <div>
+      <label class="tiny muted">Subject</label>
+      <input id="mailSubject" placeholder="Email subject">
+      <label class="tiny muted" style="display:block;margin-top:8px">Message</label>
+      <textarea id="mailBody" placeholder="Write your message..."></textarea>
+      <button id="sendAdminMail" class="btn primary" style="margin-top:10px">Send email</button>
+      <small id="mailResult" style="display:block;margin-top:7px"></small>
+    </div>
+  </div>
+</div>
+<div id="superAdminPanel" class="panel" style="margin-top:14px;display:none"><div class="sectionHead"><div><h2>Access management</h2><p>Super Admin only · roles, suspension/revocation, and security activity.</p></div><button id="refreshAccess" class="btn">Refresh</button></div><div id="managedUsers"></div><div class="sectionHead" style="margin-top:18px"><div><h3>Security events</h3><p>Recent privileged account changes.</p></div></div><div id="securityEvents"></div></div></section>
 
 </div></main></div>
 <div id="reportWidget" class="reportWidget">
@@ -256,9 +342,8 @@ function applyTheme(t){let a=t;if(t==="system")a=matchMedia("(prefers-color-sche
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-page]").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent;if(b.dataset.page==="system")loadStatus();if(b.dataset.page==="alerts")renderAlerts();if(b.dataset.page==="admin"){loadAdmin();loadSuperAdmin();}if(b.dataset.page==="groups")loadGroups()});
 async function auth(){const s=await fetch("/api/auth/status").then(r=>r.json());if(s.protected&&!s.authenticated){$("login").classList.add("show");return false}return true}$("loginBtn").onclick=async()=>{try{const x=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("loginEmail").value,password:$("loginPassword").value})});$("login").classList.remove("show");$("loginError").textContent="";applyUserUI(x.user);await bootstrap()}catch(e){$("loginError").textContent=e.message}};
 function renderDeals(){
-  let rows=[...deals],s=$("sort").value,dq=($("destinationSearch")?.value||"").trim().toLowerCase(),aq=($("airlineSearch")?.value||"").trim().toLowerCase();
+  let rows=[...deals],s=$("sort").value,dq=($("destinationSearch")?.value||"").trim().toLowerCase();
   if(dq)rows=rows.filter(d=>(d.destination+" "+(d.arrivalAirport||"")).toLowerCase().includes(dq));
-  if(aq)rows=rows.filter(d=>(d.airline||"").toLowerCase().includes(aq));
   if(s==="price")rows.sort((a,b)=>a.price-b.price);if(s==="destination")rows.sort((a,b)=>a.destination.localeCompare(b.destination));if(s==="duration")rows.sort((a,b)=>(a.flightDuration||99999)-(b.flightDuration||99999));
   const groups=new Map();for(const d of rows){const k=d.destination||d.arrivalAirport||"Destination";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d)}
   const dests=[...groups.entries()],totalPages=Math.max(1,Math.ceil(dests.length/DEALS_PER_PAGE));if(dealPage>totalPages)dealPage=totalPages;
@@ -301,7 +386,7 @@ async function loadSuperAdmin(){
  if(currentUser?.role!=="super_admin")return;
  $("superAdminPanel").style.display="";
  const u=await api("/api/super/users"),ev=await api("/api/super/events?limit=100");
- $("managedUsers").innerHTML=(u.users||[]).map(x=>`<div class="listRow"><div><strong>${x.email}</strong><small>${x.role} · ${x.status||"active"}${x.lastLogin?" · last login "+new Date(x.lastLogin).toLocaleString():""}</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><select id="role-${x.id}"><option value="user" ${["user","tester"].includes(x.role)?"selected":""}>User</option><option value="admin" ${x.role==="admin"?"selected":""}>Admin</option><option value="super_admin" ${x.role==="super_admin"?"selected":""}>Super Admin</option></select><button class="btn" onclick="changeRole('${x.id}')">Set role</button>${(x.status||"active")==="active"?`<button class="btn" onclick="changeAccess('${x.id}','suspended')">Suspend</button><button class="btn" onclick="changeAccess('${x.id}','revoked')">Revoke</button>`:`<button class="btn primary" onclick="changeAccess('${x.id}','active')">Reactivate</button>`}</div></div>`).join("")||'<div class="message">No managed accounts.</div>';
+ $("managedUsers").innerHTML=(u.users||[]).map(x=>`<div class="listRow"><div><strong>${x.email}</strong><small>${x.role==="tester"?"user":x.role} · ${x.status||"active"}${x.lastLogin?" · last login "+new Date(x.lastLogin).toLocaleString():""}</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><select class="accessRoleSelect" id="role-${x.id}"><option value="user" ${["user","tester"].includes(x.role)?"selected":""}>User</option><option value="admin" ${x.role==="admin"?"selected":""}>Admin</option><option value="super_admin" ${x.role==="super_admin"?"selected":""}>Super Admin</option></select><button class="btn" onclick="changeRole('${x.id}')">Set role</button>${(x.status||"active")==="active"?`<button class="btn" onclick="changeAccess('${x.id}','suspended')">Suspend</button><button class="btn" onclick="changeAccess('${x.id}','revoked')">Revoke</button>`:`<button class="btn primary" onclick="changeAccess('${x.id}','active')">Reactivate</button>`}</div></div>`).join("")||'<div class="message">No managed accounts.</div>';
  $("securityEvents").innerHTML=(ev.events||[]).map(x=>`<div class="listRow"><div><strong>${x.action}</strong><small>${x.actorEmail||"system"}${x.targetEmail?" → "+x.targetEmail:""} · ${new Date(x.createdAt).toLocaleString()}</small></div></div>`).join("")||'<div class="message">No security events yet.</div>';
 }
 window.changeRole=async id=>{try{await api(`/api/super/users/${id}/role`,{method:"PATCH",body:JSON.stringify({role:$("role-"+id).value})});toast("Role updated");await loadSuperAdmin()}catch(e){toast(e.message)}};
@@ -325,8 +410,11 @@ async function loadUserReports(){
   if(!["admin","super_admin"].includes(currentUser?.role))return;
   const x=await api("/api/admin/reports?limit=200");
   userReportCache=x.reports||[];
-  $("userReportList").innerHTML=userReportCache.length?userReportCache.map(t=>`<button class="ticketSubject ${String(t.id)===String(selectedReportId)?"active":""}" onclick="selectUserReport('${t.id}')"><span>#${t.id} · ${t.title}</span><small>${t.status}</small></button>`).join(""):'<div class="message">No user reports submitted.</div>';
-  if(selectedReportId && userReportCache.some(x=>String(x.id)===String(selectedReportId)))selectUserReport(selectedReportId);
+  const active=userReportCache.filter(t=>t.status!=="resolved"),resolved=userReportCache.filter(t=>t.status==="resolved");
+  const subjectButton=t=>`<button class="ticketSubject ${String(t.id)===String(selectedReportId)?"active":""}" onclick="selectUserReport('${t.id}')"><span>#${t.id} · ${t.title}</span><small>${t.status}</small></button>`;
+  $("userReportList").innerHTML=(active.length?active.map(subjectButton).join(""):'<div class="message">No open reports.</div>')+
+    (resolved.length?`<details class="ticketFolder"><summary>Resolved (${resolved.length})</summary><div class="ticketFolderBody">${resolved.map(subjectButton).join("")}</div></details>`:"");
+  if(selectedReportId&&userReportCache.some(x=>String(x.id)===String(selectedReportId)))selectUserReport(selectedReportId);
   else $("userReportDetail").innerHTML='<div class="message">Select a report to review.</div>';
 }
 window.selectUserReport=id=>{
@@ -359,15 +447,46 @@ window.deleteTodo=async id=>{try{
   await api(`/api/super/todos/${id}`,{method:"DELETE"});toast("To-do deleted");await loadSuperTodos();
 }catch(e){toast(e.message)}};
 
+
+function renderAudit(){
+  const q=($("auditSearch")?.value||"").trim().toLowerCase(),limit=Number($("auditLimit")?.value||25);
+  const rows=(window.auditCache||[]).filter(a=>!q||(`${a.action} ${a.details||""} ${a.actor||""}`).toLowerCase().includes(q)).slice(0,limit);
+  $("auditRows").innerHTML=rows.length?rows.map(a=>`<div class="listRow"><div><strong>${a.action}</strong><small>${a.details||""} · ${new Date(a.createdAt).toLocaleString()}</small></div></div>`).join(""):'<div class="message">No matching audit events.</div>';
+}
+if($("auditSearch"))$("auditSearch").oninput=renderAudit;
+if($("auditLimit"))$("auditLimit").onchange=renderAudit;
+
+
+async function loadMailRecipients(){
+  if(!["admin","super_admin"].includes(currentUser?.role))return;
+  try{
+    const x=await api("/api/admin/email/recipients"),users=x.users||[];
+    $("recipientPicker").innerHTML=users.length?users.map(u=>`<label class="recipientCheck"><input type="checkbox" class="mailRecipient" value="${u.email}"><span>${u.email} <small class="muted">(${u.role==="tester"?"user":u.role})</small></span></label>`).join(""):'<div class="tiny muted">No active users.</div>';
+  }catch(e){$("recipientPicker").innerHTML='<div class="tiny muted">Unable to load recipients.</div>'}
+  toggleRecipientPicker();
+}
+function toggleRecipientPicker(){if($("recipientPicker"))$("recipientPicker").style.display=$("mailScope")?.value==="selected"?"block":"none"}
+if($("mailScope"))$("mailScope").onchange=toggleRecipientPicker;
+if($("sendAdminMail"))$("sendAdminMail").onclick=async()=>{
+  const scope=$("mailScope").value,selectedEmails=[...document.querySelectorAll(".mailRecipient:checked")].map(x=>x.value);
+  $("mailResult").textContent="Sending…";
+  try{
+    const x=await api("/api/admin/email/send",{method:"POST",body:JSON.stringify({scope,selectedEmails,subject:$("mailSubject").value,body:$("mailBody").value})});
+    $("mailResult").textContent=`Sent ${x.sent} of ${x.total}${x.failed?` · ${x.failed} failed`:""}`;
+    toast("Email send complete");
+  }catch(e){$("mailResult").textContent=e.message}
+};
+
 async function loadAdmin(){
  await loadUserReports();
+ await loadMailRecipients();
  await loadSuperTodos();
- const [st,errs,users,audit]=await Promise.all([api("/api/status"),api("/api/admin/errors"),api("/api/admin/users"),api("/api/admin/audit")]);
+ const [st,errs,users,audit]=await Promise.all([api("/api/status"),api("/api/admin/errors"),api("/api/admin/users"),api("/api/admin/audit?limit=500")]);
  const health=[["SerpApi",st.apiConfigured],["Email",st.emailConfigured],["SMS",st.smsConfigured],["Cron",st.cronConfigured],["Database",st.database==="PostgreSQL"]];
  $("adminHealth").innerHTML=health.map(([n,ok])=>`<div class="panel metric"><span class="muted tiny">${n}</span><strong>${ok?"✓ Ready":"⚠ Setup"}</strong></div>`).join("");
  $("errorRows").innerHTML=errs.length?errs.map(e=>`<div class="listRow"><div><strong>${e.service} · ${e.code}</strong><small>${e.message} · ${e.occurrenceCount} occurrence${e.occurrenceCount==1?"":"s"} · last ${new Date(e.lastSeen).toLocaleString()}</small><details class="tiny muted" style="margin-top:6px;max-width:760px"><summary>Technical details</summary><pre style="white-space:pre-wrap">${String(e.details||"").replace(/</g,"&lt;")}</pre></details></div><div><span class="pill">${e.status}</span> <button class="btn" onclick="setErr('${e.id}','acknowledged')">Acknowledge</button> <button class="btn" onclick="setErr('${e.id}','resolved')">Resolve</button></div></div>`).join(""):'<div class="message">No application errors logged.</div>';
  $("betaRows").innerHTML=users.length?users.map(u=>`<div class="listRow"><div><strong>${u.email}</strong><small>${u.role} · ${u.enabled?"enabled":"disabled"}</small></div><button class="btn danger" onclick="removeBeta('${u.id}')">Remove</button></div>`).join(""):'<div class="message">No beta testers added.</div>';
- $("auditRows").innerHTML=audit.length?audit.map(a=>`<div class="listRow"><div><strong>${a.action}</strong><small>${a.details||""} · ${new Date(a.createdAt).toLocaleString()}</small></div></div>`).join(""):'<div class="message">No audit events yet.</div>';
+ window.auditCache=audit||[];renderAudit();
 }
 window.setErr=async(id,status)=>{await api("/api/admin/errors/"+id,{method:"PATCH",body:JSON.stringify({status})});await loadAdmin();toast("Error updated")};
 window.removeBeta=async id=>{await api("/api/admin/users/"+id,{method:"DELETE"});await loadAdmin();toast("Tester removed")};
@@ -400,7 +519,6 @@ function applyUserUI(user){
 
 
 if($("destinationSearch"))$("destinationSearch").oninput=()=>{dealPage=1;renderDeals()};
-if($("airlineSearch"))$("airlineSearch").oninput=()=>{dealPage=1;renderDeals()};
 
 
 async function loadGroups(){
