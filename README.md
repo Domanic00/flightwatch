@@ -1,69 +1,108 @@
-# FlightWatch V3
+# FlightWatch V4
 
-V3 is the first deployment-ready baseline.
+V4 adds the automation and alert engine on top of the working V3 deployment.
 
-## Included
-- Live MCO/MIA → U.S. discovery through SerpApi
-- Persistent tracked flights
-- Automatic price snapshots on every live refresh
-- Price-history metrics + chart
-- Watchlists (including ANY U.S. destination under a chosen price)
-- Profile for phone + email
-- Email/SMS preference toggles
-- Quiet hours
-- Nonstop preference
-- Light / Dark / System theme
-- System status page
-- Optional password gate for the hosted site
-- Local JSON storage for easy testing
-- PostgreSQL support for hosting
-- Render deployment blueprint
+## New in V4
 
-## Local setup
-1. Rename `.env.example` to `.env`.
-2. Add your SerpApi key.
-3. Leave `DATABASE_URL` blank locally.
-4. You can leave `APP_PASSWORD` blank locally, or set one to test login.
-5. Run:
-   npm.cmd install
-   npm.cmd start
-6. Open http://localhost:3000
-
-Local persistent data is written to `.data/`.
-
-## Hosting architecture
-GitHub → Render → Neon PostgreSQL → SerpApi
-
-### GitHub
-Create a private repository named `flightwatch`. Upload this project, but DO NOT upload `.env`.
-
-### Neon
-Create a free PostgreSQL database and copy the pooled connection string.
-
-### Render
-Create a Web Service from the GitHub repository. The included `render.yaml` is ready for Render.
-
-Set these environment variables in Render:
-- `SERPAPI_KEY`
-- `APP_PASSWORD`
-- `DATABASE_URL`
-- `SESSION_SECRET` (Render can generate this)
-
-Once GitHub and Render are connected, every push to the repository can automatically redeploy the website.
-
-## Why V3 has password protection
-The Profile section can store a phone number and email address. Until full user authentication is added later, a private password gate prevents those settings from being exposed on a public URL.
-
-## V4
-- Scheduled background checks
+- Hourly monitoring endpoint for MCO + MIA
+- GitHub Actions scheduled workflow
 - Watchlist evaluation
-- Historical deal scoring
-- Duplicate-alert suppression
-- Real email notifications
-- Real SMS notifications
-- Alert history
+- Historical route statistics
+- Deal scoring:
+  - EXCEPTIONAL — at or below the lowest recorded fare
+  - GREAT — at least 25% below recent average
+  - GOOD — at least 12% below recent average
+  - MATCH — meets your watchlist threshold
+  - NEW — insufficient history, but meets your threshold
+- Duplicate alert suppression
+- Persistent alert history in Neon
+- Manual "Run monitor now" button
+- Test notification button
+- Email delivery support through Resend
+- SMS delivery support through Twilio
+- Quiet-hours enforcement
+- System-status indicators for automation, email, SMS, and cron
+- Retains V3 profile, tracked flights, watchlists, and snapshots
+- Includes the Render proxy/session fix
 
-## Future-update workflow
-The goal is to stop replacing folders manually. After the GitHub repository and Render deployment exist, the live site updates whenever the repository changes.
+## Upgrade the live site
 
-There is not currently a GitHub write connector available to this ChatGPT session, so I cannot directly push commits into your repository from here yet. I can still prepare versioned update packages/patches, and once a compatible GitHub connection is available the manual commit step can be removed too.
+V4 is intended to replace the files in your existing GitHub `flightwatch` repository.
+
+Do NOT delete or recreate the Neon database. V4 automatically adds the new `alerts` table and keeps the existing V3 tables/data.
+
+### Render: new environment variable
+
+Add:
+
+    CRON_SECRET=<a long random secret>
+
+Later, for email:
+
+    RESEND_API_KEY=...
+    RESEND_FROM=FlightWatch <your-verified-sender@example.com>
+
+Later, for SMS:
+
+    TWILIO_ACCOUNT_SID=...
+    TWILIO_AUTH_TOKEN=...
+    TWILIO_FROM_NUMBER=...
+
+You can deploy V4 before Resend or Twilio are configured. The engine will record alert history and mark delivery as `not_configured`.
+
+## Hourly automation with GitHub Actions
+
+The included workflow is:
+
+    .github/workflows/flightwatch-monitor.yml
+
+In your GitHub repository, create these repository Actions secrets:
+
+    FLIGHTWATCH_URL
+    CRON_SECRET
+
+`FLIGHTWATCH_URL` should be your Render site URL without a trailing slash, for example:
+
+    https://flightwatch-example.onrender.com
+
+`CRON_SECRET` must exactly match the `CRON_SECRET` value you set in Render.
+
+The workflow runs at minute 17 of each hour and can also be run manually from the Actions tab.
+
+Why use GitHub Actions:
+- Your Render free web service can sleep while idle.
+- GitHub Actions can wake it by calling the secure monitoring endpoint.
+- Your computer does not need to be on.
+
+## Notification setup
+
+### Email — Resend
+V4 supports Resend. During initial testing, Resend may restrict where its default sender can send. Once you verify a domain/sender, set `RESEND_FROM` to that sender.
+
+### SMS — Twilio
+V4 supports Twilio Messaging. You will need:
+- Account SID
+- Auth token
+- A Twilio sender phone number
+
+Keep all credentials in Render environment variables. Never commit them to GitHub.
+
+## Database migration
+
+No manual SQL is necessary. V4 runs `CREATE TABLE IF NOT EXISTS` at startup and adds the new alert table/index automatically.
+
+## Safe first test
+
+1. Deploy V4.
+2. Confirm the site loads and V3 data is still present.
+3. Create a cheap watchlist, such as `MCO + MIA → ANY under $100`.
+4. Open Alerts.
+5. Click `Run monitor now`.
+6. Confirm alert records appear.
+7. Only then configure Resend/Twilio.
+8. Use `Send test notification`.
+9. Finally add GitHub Actions secrets for hourly monitoring.
+
+## Important
+
+FlightWatch uses the fare values returned by Google Travel Explore. Always verify the final itinerary, traveler count, fees, and final booking price before purchasing.
