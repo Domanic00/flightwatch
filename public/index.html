@@ -13,6 +13,12 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 .pageBtn:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:760px){.sidebarLogout{position:static;margin-top:10px;width:100%}}
 
+
+.accountBadge{position:absolute;left:18px;right:18px;bottom:132px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(255,255,255,.03);overflow:hidden}
+.accountBadge strong{display:block;color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.accountBadge span{display:block;color:#7f94b3;font-size:11px;text-transform:capitalize;margin-top:2px}
+@media(max-width:760px){.accountBadge{position:static;margin-top:10px}}
+
 </style></head><body>
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
@@ -25,7 +31,7 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <p id="loginError" class="tiny" style="color:var(--red);margin-bottom:0"></p>
 </div></div>
 <div class="shell"><aside class="sidebar"><div class="logo"><span>✈</span>FlightWatch</div><nav class="nav">
-<button data-page="discover" class="active">Discover</button><button data-page="tracked">Tracked flights</button><button data-page="history">Price history</button><button data-page="watchlists">Watchlists</button><button data-page="alerts">Alerts</button><button data-page="profile">Profile</button><button data-page="system">System status</button><button data-page="admin">Admin</button></nav><button id="sidebarLogout" class="sidebarLogout">↪ Sign out</button><div class="sideFoot">MCO + MIA<br>2 adults · Round trip<br>United States</div></aside>
+<button data-page="discover" class="active">Discover</button><button data-page="tracked">Tracked flights</button><button data-page="history">Price history</button><button data-page="watchlists">Watchlists</button><button data-page="alerts">Alerts</button><button data-page="profile">Profile</button><button data-page="system" data-admin-only="true">System status</button><button data-page="admin" data-admin-only="true">Admin</button></nav><div id="accountBadge" class="accountBadge"><strong id="accountEmail">—</strong><span id="accountRole">—</span></div><button id="sidebarLogout" class="sidebarLogout">↪ Sign out</button><div class="sideFoot">MCO + MIA<br>2 adults · Round trip<br>United States</div></aside>
 <main class="main"><header class="top"><strong id="pageTitle">Discover</strong><div class="topRight"><span class="dot"></span><span id="apiStatus" class="tiny muted">Checking…</span><button id="theme" class="btn">◐ System</button></div></header><div class="content">
 
 <section id="discover" class="page active"><div class="hero"><div><div class="eyebrow">LIVE U.S. DEAL DISCOVERY</div><h1>Cheap trips, without the searching.</h1><p>Explore low-cost round trips from Orlando and Miami, then save the routes worth watching.</p></div><button id="refresh" class="btn">↻ Refresh live deals</button></div>
@@ -56,11 +62,11 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 
 </div></main></div><div id="toast" class="toast"></div>
 <script>
-let deals=[],tracked=[],profile={},watchlists=[],dealPage=1;const DEALS_PER_PAGE=10;const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(n||0)),date=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"Flexible";
+let deals=[],tracked=[],profile={},watchlists=[],dealPage=1,currentUser=null;const DEALS_PER_PAGE=10;const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(n||0)),date=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"Flexible";
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}async function api(url,opt={}){const r=await fetch(url,{headers:{"Content-Type":"application/json",...(opt.headers||{})},...opt});const d=await r.json().catch(()=>({}));if(r.status===401){$("login").classList.add("show");throw new Error("Authentication required")}if(!r.ok)throw new Error(d.error||"Request failed");return d}
 function applyTheme(t){let a=t;if(t==="system")a=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.dataset.theme=a;localStorage.setItem("fw-theme",t);$("theme").textContent=t==="system"?"◐ System":t==="dark"?"☾ Dark":"☀ Light"}applyTheme(localStorage.getItem("fw-theme")||"system");$("theme").onclick=()=>{const c=localStorage.getItem("fw-theme")||"system";applyTheme(c==="system"?"light":c==="light"?"dark":"system")};
 document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-page]").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(b.dataset.page).classList.add("active");$("pageTitle").textContent=b.textContent;if(b.dataset.page==="system")loadStatus();if(b.dataset.page==="alerts")renderAlerts();if(b.dataset.page==="admin")loadAdmin()});
-async function auth(){const s=await fetch("/api/auth/status").then(r=>r.json());if(s.protected&&!s.authenticated){$("login").classList.add("show");return false}return true}$("loginBtn").onclick=async()=>{try{const x=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("loginEmail").value,password:$("loginPassword").value})});$("login").classList.remove("show");$("loginError").textContent="";await bootstrap()}catch(e){$("loginError").textContent=e.message}};
+async function auth(){const s=await fetch("/api/auth/status").then(r=>r.json());if(s.protected&&!s.authenticated){$("login").classList.add("show");return false}return true}$("loginBtn").onclick=async()=>{try{const x=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email:$("loginEmail").value,password:$("loginPassword").value})});$("login").classList.remove("show");$("loginError").textContent="";applyUserUI(x.user);await bootstrap()}catch(e){$("loginError").textContent=e.message}};
 function renderDeals(){
   let rows=[...deals],s=$("sort").value;
   if(s==="price")rows.sort((a,b)=>a.price-b.price);
@@ -85,7 +91,19 @@ function renderDeals(){
 window.changeDealPage=n=>{dealPage=n;renderDeals();window.scrollTo({top:0,behavior:"smooth"})};
 async function loadDeals(){try{$("deals").innerHTML='<div class="message">Searching live U.S. fares…</div>';const d=await api("/api/deals?origin="+$("origin").value+"&adults="+($("travelers")?.value||2));deals=d.deals;$("best").textContent=deals.length?money(Math.min(...deals.map(x=>x.price))):"$—";$("dealCount").textContent=deals.length;$("nonstop").textContent=deals.filter(x=>x.stops===0).length;$("lastChecked").textContent=`${d.source} · checked ${new Date(d.fetchedAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`;renderDeals();await loadTracked()}catch(e){$("deals").innerHTML=`<div class="message">${e.message}</div>`}}$("find").onclick=$("refresh").onclick=()=>{dealPage=1;loadDeals()};$("sort").onchange=()=>{dealPage=1;renderDeals()};
 async function loadTracked(){tracked=await api("/api/tracked");$("trackedCount").textContent=tracked.length;$("trackedRows").innerHTML=tracked.length?tracked.map(d=>`<div class="listRow"><div><strong>${d.departureAirport} → ${d.arrivalAirport||d.destination}</strong><small>${d.destination} · ${date(d.startDate)}–${date(d.endDate)}${d.airline?" · "+d.airline:""}</small></div><button class="btn danger" onclick="removeTrack('${d.id}')">Remove</button></div>`).join(""):'<div class="message">No tracked flights yet.</div>';renderDeals()}window.toggleTrack=async id=>{const d=deals.find(x=>x.id===id),exists=tracked.some(x=>x.id===id);if(exists)await api("/api/tracked/"+encodeURIComponent(id),{method:"DELETE"});else await api("/api/tracked",{method:"POST",body:JSON.stringify(d)});await loadTracked();toast(exists?"Removed":"Tracking saved")};window.removeTrack=async id=>{await api("/api/tracked/"+encodeURIComponent(id),{method:"DELETE"});await loadTracked()};
-async function loadProfile(){profile=await api("/api/profile");$("email").value=profile.email||"";$("phone").value=profile.phone||"";$("notifyEmail").checked=!!profile.notifyEmail;$("notifySms").checked=!!profile.notifySms;$("quietEnabled").checked=!!profile.quietHoursEnabled;$("quietStart").value=profile.quietStart||"22:00";$("quietEnd").value=profile.quietEnd||"08:00";$("maxPrice").value=profile.maxPrice||150;$("profileNonstop").checked=!!profile.nonstopOnly}$("saveProfile").onclick=async()=>{profile=await api("/api/profile",{method:"PUT",body:JSON.stringify({email:$("email").value,phone:$("phone").value,notifyEmail:$("notifyEmail").checked,notifySms:$("notifySms").checked,quietHoursEnabled:$("quietEnabled").checked,quietStart:$("quietStart").value,quietEnd:$("quietEnd").value,maxPrice:Number($("maxPrice").value),nonstopOnly:$("profileNonstop").checked})});toast("Profile saved");renderAlerts()};
+
+function enforceProfileIdentity(){
+  if(currentUser?.role==="tester"){
+    $("email").value=currentUser.email||"";
+    $("email").readOnly=true;
+    $("email").title="Tester login email";
+  }else{
+    $("email").readOnly=false;
+    $("email").title="";
+  }
+}
+
+async function loadProfile(){profile=await api("/api/profile");$("email").value=profile.email||"";$("phone").value=profile.phone||"";$("notifyEmail").checked=!!profile.notifyEmail;$("notifySms").checked=!!profile.notifySms;$("quietEnabled").checked=!!profile.quietHoursEnabled;$("quietStart").value=profile.quietStart||"22:00";$("quietEnd").value=profile.quietEnd||"08:00";$("maxPrice").value=profile.maxPrice||150;$("profileNonstop").checked=!!profile.nonstopOnly;enforceProfileIdentity()}$("saveProfile").onclick=async()=>{profile=await api("/api/profile",{method:"PUT",body:JSON.stringify({email:$("email").value,phone:$("phone").value,notifyEmail:$("notifyEmail").checked,notifySms:$("notifySms").checked,quietHoursEnabled:$("quietEnabled").checked,quietStart:$("quietStart").value,quietEnd:$("quietEnd").value,maxPrice:Number($("maxPrice").value),nonstopOnly:$("profileNonstop").checked})});toast("Profile saved");renderAlerts()};
 async function loadWatch(){watchlists=await api("/api/watchlists");$("watchRows").innerHTML=watchlists.length?watchlists.map(w=>`<div class="listRow"><div><strong>${w.label}</strong><small>${w.origin} → ${w.destinationCode==="ANY"?"Anywhere in U.S.":w.destinationCode} · under ${money(w.maxPrice)}${w.nonstopOnly?" · nonstop only":""}</small></div><button class="btn danger" onclick="removeWatch('${w.id}')">Remove</button></div>`).join(""):'<div class="message">No watchlists yet.</div>'}$("addWatch").onclick=async()=>{await api("/api/watchlists",{method:"POST",body:JSON.stringify({label:$("watchLabel").value,origin:$("watchOrigin").value,destinationCode:$("watchDest").value||"ANY",maxPrice:Number($("watchPrice").value),nonstopOnly:$("watchNonstop").checked})});await loadWatch();toast("Watchlist created")};window.removeWatch=async id=>{await api("/api/watchlists/"+encodeURIComponent(id),{method:"DELETE"});await loadWatch()};
 $("loadHistory").onclick=async()=>{const o=$("histOrigin").value,d=$("histDest").value.trim().toUpperCase();if(!d)return toast("Enter a destination airport");const rows=await api(`/api/history?origin=${o}&destinationCode=${encodeURIComponent(d)}&limit=300`),p=rows.map(x=>Number(x.price));$("histLow").textContent=p.length?money(Math.min(...p)):"—";$("histAvg").textContent=p.length?money(p.reduce((a,b)=>a+b,0)/p.length):"—";$("histHigh").textContent=p.length?money(Math.max(...p)):"—";$("historyMsg").textContent=p.length?`${p.length} observations for ${o} → ${d}`:"No snapshots yet. Refresh Discover over time to build history.";draw(rows)};
 function draw(rows){const c=$("chart"),ctx=c.getContext("2d"),r=c.getBoundingClientRect(),dp=devicePixelRatio||1;c.width=r.width*dp;c.height=r.height*dp;ctx.scale(dp,dp);ctx.clearRect(0,0,r.width,r.height);const st=getComputedStyle(document.documentElement);ctx.strokeStyle=st.getPropertyValue("--line");for(let i=0;i<5;i++){let y=20+i*(r.height-50)/4;ctx.beginPath();ctx.moveTo(42,y);ctx.lineTo(r.width-12,y);ctx.stroke()}if(!rows.length)return;const p=rows.map(x=>Number(x.price)),mn=Math.min(...p),mx=Math.max(...p),span=Math.max(1,mx-mn);ctx.strokeStyle=st.getPropertyValue("--accent");ctx.lineWidth=2.5;ctx.beginPath();rows.forEach((x,i)=>{let xx=42+i/Math.max(1,rows.length-1)*(r.width-60),yy=20+(mx-Number(x.price))/span*(r.height-50);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)});ctx.stroke()}
@@ -117,6 +135,20 @@ async function doLogout(){
 }
 if($("sidebarLogout"))$("sidebarLogout").onclick=doLogout;
 if($("logout"))$("logout").onclick=doLogout;
+
+
+function applyUserUI(user){
+  currentUser=user||null;
+  $("accountEmail").textContent=user?.email||"Unknown";
+  $("accountRole").textContent=user?.role||"user";
+  document.querySelectorAll("[data-admin-only='true']").forEach(el=>el.style.display=user?.role==="admin"?"":"none");
+  if(user?.role!=="admin"){
+    const active=document.querySelector("[data-page].active");
+    if(active?.dataset.page==="admin"||active?.dataset.page==="system"){
+      document.querySelector("[data-page='discover']")?.click();
+    }
+  }
+}
 
 async function bootstrap(){await Promise.all([loadTracked(),loadProfile(),loadWatch()]);$("apiStatus").textContent="Ready";renderAlerts();loadDeals()}auth().then(ok=>{if(ok)bootstrap()});
 </script></body></html>

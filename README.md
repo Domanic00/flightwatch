@@ -137,3 +137,11 @@ Admin adds tester emails under Admin → Beta testers. A tester enters that emai
 
 ## V5.2.1 hotfix
 Fixes a duplicated malformed logout JavaScript block introduced in V5.2 that prevented the page script from parsing. Sign in, tester setup, logout, pagination, and other button handlers can now initialize normally.
+
+## V5.3 user isolation
+- Sidebar now shows the signed-in account email and role.
+- Tester profile/contact settings are stored separately from the admin profile.
+- Tester login email is displayed in Profile and is read-only.
+- Admin and System Status navigation are hidden from testers.
+- `/api/admin/*` and `/api/status` are server-side admin-only.
+- Admin profile remains unchanged and continues using the original profile record.
