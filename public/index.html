@@ -30,11 +30,11 @@ html[data-theme="dark"]{--bg:#0b1220;--surface:#111827;--surface2:#172033;--text
 <div id="login" class="login show"><div class="loginCard">
 <div class="eyebrow">PRIVATE FLIGHTWATCH</div>
 <h1>Welcome back</h1>
-<p class="muted">Sign in as admin or use an invited tester account.</p>
+<p class="muted">Sign in as admin or use an invited account.</p>
 <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="admin or invited email"></div>
 <div class="field" style="margin-top:10px"><label>Password</label><input id="loginPassword" type="password" placeholder="Password"></div>
 <button id="loginBtn" class="btn primary" style="width:100%;margin-top:14px">Sign in</button>
-<button id="setupBtn" class="btn" style="width:100%;margin-top:8px">First-time tester setup</button>
+<button id="setupBtn" class="btn" style="width:100%;margin-top:8px">First-time account setup</button>
 <p id="loginError" class="tiny" style="color:var(--red);margin-bottom:0"></p>
 </div></div>
 <div class="shell"><aside class="sidebar"><div class="logo"><span>✈</span>FlightWatch</div><nav class="nav">
@@ -105,7 +105,7 @@ function enforceProfileIdentity(){
   if(currentUser?.role==="tester"){
     $("email").value=currentUser.email||"";
     $("email").readOnly=true;
-    $("email").title="Tester login email";
+    $("email").title="Account login email";
   }else{
     $("email").readOnly=false;
     $("email").title="";

@@ -165,3 +165,8 @@ SerpApi's Google Travel Explore API supports outbound/return dates, travel class
 - Optional `SUPER_ADMIN_EMAIL` Render variable identifies the primary Super Admin email.
 - Super Admin Access Management supports role changes, suspension, revocation, reactivation, and Security Events.
 - Regular Admins cannot use Super Admin management endpoints.
+
+## V6.0.2 Super Admin login fix
+The master login now accepts the email configured in `SUPER_ADMIN_EMAIL` together with `APP_PASSWORD`.
+For backward compatibility, `admin` (and a blank email) also remain valid master usernames.
+The first-time setup button is renamed to **First-time account setup**.
