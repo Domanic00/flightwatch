@@ -157,3 +157,11 @@ Fixes a duplicated malformed logout JavaScript block introduced in V5.2 that pre
 - MCO/MIA remain the only departure airports and U.S. destinations remain the product scope.
 
 SerpApi's Google Travel Explore API supports outbound/return dates, travel class, adults, stops, arrival IDs, airline inclusion, and maximum duration. V6 uses the supported server-side parameters for the primary filters and client-side search for clean destination/airline discovery.
+
+## V6.0.1
+- Fixes the V6 Render startup syntax error.
+- Adds User → Admin → Super Admin hierarchy.
+- Primary password-based admin login is Super Admin.
+- Optional `SUPER_ADMIN_EMAIL` Render variable identifies the primary Super Admin email.
+- Super Admin Access Management supports role changes, suspension, revocation, reactivation, and Security Events.
+- Regular Admins cannot use Super Admin management endpoints.

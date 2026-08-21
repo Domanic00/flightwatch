@@ -14,11 +14,13 @@ app.use(cookieSession({
     secure:process.env.NODE_ENV==="production"
 }));
 const protectedMode=Boolean(process.env.APP_PASSWORD);
-function isAdmin(q){return q.session?.user?.role==="admin"}
+function isSuperAdmin(q){return q.session?.user?.role==="super_admin"}
+function isAdmin(q){return ["admin","super_admin"].includes(q.session?.user?.role)}
 app.get("/api/auth/status",(q,r)=>r.json({protected:protectedMode,authenticated:!!q.session?.user,user:q.session?.user||null}));
 app.get("/api/auth/me",(q,r)=>r.json({authenticated:!!q.session?.user,user:q.session?.user||null}));
-app.post("/api/auth/login",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");if(process.env.APP_PASSWORD&&password===process.env.APP_PASSWORD&&(!email||email==="admin")){q.session.user={id:"admin",email:"admin",role:"admin"};await db.audit("login","Admin signed in","admin");return r.json({ok:true,user:q.session.user})}const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled)return r.status(401).json({error:"Invalid email or password"});if(!u.passwordHash)return r.status(409).json({error:"First-time setup required",setupRequired:true});if(!(await bcrypt.compare(password,u.passwordHash)))return r.status(401).json({error:"Invalid email or password"});q.session.user={id:u.id,email:u.email,role:u.role||"tester"};await db.markBetaLogin(u.id);await db.audit("login",`${u.email} signed in`,u.email);r.json({ok:true,user:q.session.user})});
-app.post("/api/auth/setup",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled)return r.status(403).json({error:"This email has not been invited"});if(u.passwordHash)return r.status(409).json({error:"Account already configured"});if(password.length<10)return r.status(400).json({error:"Password must be at least 10 characters"});await db.setBetaPassword(u.id,await bcrypt.hash(password,12));q.session.user={id:u.id,email:u.email,role:u.role||"tester"};await db.markBetaLogin(u.id);await db.audit("tester_account_setup",`${email} created a password`,email);r.json({ok:true,user:q.session.user})});
+app.post("/api/auth/login",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");if(process.env.APP_PASSWORD&&password===process.env.APP_PASSWORD&&(!email||email==="admin")){const adminEmail=String(process.env.SUPER_ADMIN_EMAIL||process.env.ADMIN_EMAIL||email||"admin").toLowerCase();
+q.session.user={id:"admin",email:adminEmail,role:"super_admin"};await db.audit("login","Admin signed in","admin");return r.json({ok:true,user:q.session.user})}const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled||u.status==="suspended"||u.status==="revoked")return r.status(401).json({error:"Invalid email or password"});if(!u.passwordHash)return r.status(409).json({error:"First-time setup required",setupRequired:true});if(!(await bcrypt.compare(password,u.passwordHash)))return r.status(401).json({error:"Invalid email or password"});q.session.user={id:u.id,email:u.email,role:(u.role==="tester"?"user":(u.role||"user"))};await db.markBetaLogin(u.id);await db.audit("login",`${u.email} signed in`,u.email);r.json({ok:true,user:q.session.user})});
+app.post("/api/auth/setup",async(q,r)=>{const email=String(q.body?.email||"").trim().toLowerCase(),password=String(q.body?.password||"");const u=await db.findBetaUserByEmail(email);if(!u||!u.enabled||u.status==="suspended"||u.status==="revoked")return r.status(403).json({error:"This email has not been invited"});if(u.passwordHash)return r.status(409).json({error:"Account already configured"});if(password.length<10)return r.status(400).json({error:"Password must be at least 10 characters"});await db.setBetaPassword(u.id,await bcrypt.hash(password,12));q.session.user={id:u.id,email:u.email,role:(u.role==="tester"?"user":(u.role||"user"))};await db.markBetaLogin(u.id);await db.audit("tester_account_setup",`${email} created a password`,email);r.json({ok:true,user:q.session.user})});
 app.post("/api/auth/logout",(q,r)=>{q.session=null;r.json({ok:true})});
 app.use("/api",(q,r,n)=>{if(q.path.startsWith("/auth/")||q.path==="/health"||q.path.startsWith("/cron/"))return n();if(!q.session?.user)return r.status(401).json({error:"Authentication required."});if((q.path.startsWith("/admin/")||q.path==="/status")&&!isAdmin(q))return r.status(403).json({error:"Admin only"});n()});
 
@@ -130,38 +132,57 @@ async function monitoringRun({deliver=true}={}){
   return {deals:deals.length,newAlerts:alerts.length,alerts}
 }
 
-app.get("/api/health",(q,r)=>r.json({ok:true,apiConfigured:!!process.env.SERPAPI_KEY,database:db.usePostgres?"postgres":"local",v:"4.0.0"}));
+app.get("/api/health",(q,r)=>r.json({ok:true,apiConfigured:!!process.env.SERPAPI_KEY,database:db.usePostgres?"postgres":"local",v:"6.0.1"}));
 app.get("/api/deals",async(q,r)=>{try{
-  if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});
-  const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:["MCO","MIA"].includes(req)?[req]:["MCO","MIA"];
-  const opts={adults:q.query.adults,travelClass:q.query.travelClass||1,outboundDate:q.query.outboundDate||"",returnDate:q.query.returnDate||"",arrivalId:String(q.query.arrivalId||"").toUpperCase(),stops:q.query.stops||"",airlines:String(q.query.airlines||"").toUpperCase(),maxDuration:q.query.maxDuration||""};
-  if((opts.outboundDate&&!opts.returnDate)||(!opts.outboundDate&&opts.returnDate))return r.status(400).json({error:"For round trips, choose both departure and return dates."});
-  const deals=await getDeals(origins,opts);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"})
-}catch(e){await db.logError({service:"SerpApi",code:"SEARCH_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
+ if(!process.env.SERPAPI_KEY)return r.status(500).json({error:"SERPAPI_KEY is missing."});
+ const req=String(q.query.origin||"BOTH").toUpperCase(),origins=req==="BOTH"?["MCO","MIA"]:(["MCO","MIA"].includes(req)?[req]:["MCO","MIA"]);
+ const opts={adults:q.query.adults,travelClass:q.query.travelClass||1,outboundDate:q.query.outboundDate||"",returnDate:q.query.returnDate||"",arrivalId:String(q.query.arrivalId||"").toUpperCase(),stops:q.query.stops||"",airlines:String(q.query.airlines||"").toUpperCase(),maxDuration:q.query.maxDuration||""};
+ if((opts.outboundDate&&!opts.returnDate)||(!opts.outboundDate&&opts.returnDate))return r.status(400).json({error:"For round trips, choose both departure and return dates."});
+ const deals=await getDeals(origins,opts);await db.saveSnapshots(deals);r.json({deals,fetchedAt:new Date().toISOString(),source:"Google Travel Explore via SerpApi"});
+}catch(e){await db.logError({service:"SerpApi",code:"SEARCH_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
 
+app.get("/api/tracked",async(q,r)=>r.json(await db.getTracked(q.session.user)));
+app.post("/api/tracked",async(q,r)=>r.json(await db.addTracked(q.body||{},q.session.user)));
+app.delete("/api/tracked/:id",async(q,r)=>{await db.removeTracked(q.params.id,q.session.user);r.json({ok:true})});
+app.get("/api/profile",async(q,r)=>r.json(await db.getUserProfile(q.session.user)));
+app.put("/api/profile",async(q,r)=>r.json(await db.saveUserProfile(q.session.user,q.body||{})));
+app.get("/api/watchlists",async(q,r)=>r.json(await db.getWatchlists(q.session.user)));
+app.post("/api/watchlists",async(q,r)=>r.json(await db.addWatchlist(q.body||{},q.session.user)));
+app.delete("/api/watchlists/:id",async(q,r)=>{await db.removeWatchlist(q.params.id,q.session.user);r.json({ok:true})});
+app.get("/api/history",async(q,r)=>r.json(await db.history(q.query.origin||"",String(q.query.destinationCode||"").toUpperCase(),q.query.limit)));
+app.get("/api/alerts",async(q,r)=>r.json(await db.getAlerts(q.query.limit||100,q.session.user)));
+app.post("/api/alerts/test",async(q,r)=>{try{
+ const profile=await db.getUserProfile(q.session.user),fake={departureAirport:"MCO",arrivalAirport:"TEST",destination:"FlightWatch Test",price:99,startDate:null,endDate:null,stops:0,flightLink:null},alert={score:"TEST",reason:"Your FlightWatch notification settings are working."};
+ const [emailStatus,smsStatus]=await Promise.all([sendEmail(profile,fake,alert),sendSms(profile,fake,alert)]);r.json({emailStatus,smsStatus});
+}catch(e){r.status(500).json({error:e.message})}});
+app.post("/api/monitor/run",async(q,r)=>{try{const x=await monitoringRun({deliver:false});await db.audit("manual_monitor_run",JSON.stringify({deals:x.deals,newAlerts:x.newAlerts}),q.session.user.email);r.json(x)}catch(e){await db.logError({service:"Monitor",code:"RUN_FAILED",message:e.message,details:e.stack||""});r.status(500).json({error:e.message})}});
 
 app.get("/api/groups",async(q,r)=>r.json({groups:await db.getGroups(q.session.user),invites:await db.getGroupInvites(q.session.user)}));
 app.post("/api/groups",async(q,r)=>{try{const g=await db.createGroup(q.body?.name,q.session.user);await db.audit("group_created",g.name,q.session.user.email);r.json(g)}catch(e){r.status(400).json({error:e.message})}});
 app.post("/api/groups/:id/invite",async(q,r)=>{try{const x=await db.inviteToGroup(q.params.id,q.body?.email,q.session.user);await db.audit("group_invite_sent",q.body?.email,q.session.user.email);r.json({ok:true,inviteId:x.id})}catch(e){r.status(400).json({error:e.message})}});
 app.post("/api/groups/accept",async(q,r)=>{try{r.json(await db.acceptGroupInvite(q.body?.token,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
 
+app.get("/api/super/users",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});r.json({users:await db.listManagedUsers()})});
+app.patch("/api/super/users/:id/role",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});try{r.json(await db.setManagedUserRole(q.params.id,q.body?.role,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
+app.patch("/api/super/users/:id/status",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});try{r.json(await db.setManagedUserStatus(q.params.id,q.body?.status,q.body?.reason,q.session.user))}catch(e){r.status(400).json({error:e.message})}});
+app.get("/api/super/events",async(q,r)=>{if(!isSuperAdmin(q))return r.status(403).json({error:"Super Admin only"});r.json({events:await db.getSecurityEvents(q.query.limit||200)})});
+
 app.get("/api/admin/errors",async(q,r)=>r.json(await db.getErrors(q.query.limit||100)));
-app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`);r.json({ok:true})});
+app.patch("/api/admin/errors/:id",async(q,r)=>{await db.setErrorStatus(q.params.id,q.body?.status);await db.audit("error_status_changed",`${q.params.id} → ${q.body?.status}`,q.session.user.email);r.json({ok:true})});
 app.get("/api/admin/audit",async(q,r)=>r.json(await db.getAudit(q.query.limit||100)));
 app.get("/api/admin/users",async(q,r)=>r.json(await db.getBetaUsers()));
-app.post("/api/admin/users",async(q,r)=>{try{await db.addBetaUser(q.body?.email,q.body?.role||"tester");await db.audit("beta_user_added",q.body?.email||"");r.json({ok:true})}catch(e){r.status(400).json({error:e.message})}});
-app.delete("/api/admin/users/:id",async(q,r)=>{await db.removeBetaUser(q.params.id);await db.audit("beta_user_removed",q.params.id);r.json({ok:true})});
+app.post("/api/admin/users",async(q,r)=>{try{await db.addBetaUser(q.body?.email,q.body?.role||"user");await db.audit("user_added",q.body?.email||"",q.session.user.email);r.json({ok:true})}catch(e){r.status(400).json({error:e.message})}});
+app.delete("/api/admin/users/:id",async(q,r)=>{await db.removeBetaUser(q.params.id);await db.audit("user_removed",q.params.id,q.session.user.email);r.json({ok:true})});
 
 app.get("/api/status",async(q,r)=>r.json({...await db.status(),apiConfigured:!!process.env.SERPAPI_KEY,protectedMode,emailConfigured:!!process.env.RESEND_API_KEY,smsConfigured:!!(process.env.TWILIO_ACCOUNT_SID&&process.env.TWILIO_AUTH_TOKEN&&process.env.TWILIO_FROM_NUMBER),cronConfigured:!!process.env.CRON_SECRET}));
+app.post("/api/cron/check",async(q,r)=>{try{
+ const secret=String(q.get("x-cron-secret")||q.query.secret||"");if(!process.env.CRON_SECRET||secret!==process.env.CRON_SECRET)return r.status(401).json({error:"Invalid cron secret."});
+ r.json(await monitoringRun({deliver:true}));
+}catch(e){console.error("Automation failed",e);r.status(500).json({error:e.message})}});
 
-// Secure endpoint intended for GitHub Actions / Render Cron.
-app.post("/api/cron/check",async(q,r)=>{
-  try{
-    const secret=String(q.get("x-cron-secret")||q.query.secret||"");
-    if(!process.env.CRON_SECRET||secret!==process.env.CRON_SECRET)return r.status(401).json({error:"Invalid cron secret."});
-    r.json(await monitoringRun({deliver:true}));
-  }catch(e){console.error("Automation failed",e);r.status(500).json({error:e.message})}
-});
-
-app.use(express.static(path.join(__dirname,"public")));app.get("*",(q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
-db.init().then(()=>app.listen(PORT,()=>console.log(`FlightWatch V4 running at http://localhost:${PORT}`))).catch(e=>{console.error(e);process.exit(1)});
+app.use(express.static(path.join(__dirname,"public")));
+app.get("*",(q,r)=>r.sendFile(path.join(__dirname,"public","index.html")));
+db.init().then(async()=>{
+ await db.bootstrapSuperAdmin(process.env.SUPER_ADMIN_EMAIL||process.env.ADMIN_EMAIL||"");
+ app.listen(PORT,()=>console.log(`FlightWatch V6.0.1 running at http://localhost:${PORT}`));
+}).catch(e=>{console.error(e);process.exit(1)});

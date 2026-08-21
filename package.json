@@ -1,6 +1,6 @@
 {
   "name": "flightwatch-v5",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "private": true,
   "main": "server.js",
   "scripts": {
@@ -17,5 +17,5 @@
     "pg": "^8.13.3",
     "bcryptjs": "^2.4.3"
   },
-  "description": "FlightWatch V6 - full user isolation, groups, advanced flight filters, destination-first results."
+  "description": "FlightWatch V6.0.1 hotfix with Super Admin/Admin/User hierarchy."
 }
